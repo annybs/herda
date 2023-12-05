@@ -8,12 +8,23 @@ export function createExpress(ctx: Context) {
 
   app.use(express.json())
 
+  app.use(async (req, res, next) => {
+    try {
+      await ctx.auth.verifyRequest(req)
+    } catch (err) {
+      ctx.log.warn('Failed to verify request', err)
+    }
+    next()
+  })
+
   const prefix = ctx.config.api.prefix
 
   app.post(`${prefix}/account`, account.createAccount(ctx))
   app.get(`${prefix}/account/:id?`, account.getAccount(ctx))
   app.put(`${prefix}/account/:id?`, account.updateAccount(ctx))
   app.delete(`${prefix}/account/:id?`, account.deleteAccount(ctx))
+
+  app.post(`${prefix}/login/account`, account.loginAccount(ctx))
 
   // Handle errors passed to next function
   const catchError: ErrorRequestHandler = (err, req, res, next) => {

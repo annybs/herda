@@ -1,4 +1,5 @@
 import type { SignalConstants } from 'os'
+import createAuth from './auth'
 import createDatabase from './db'
 import { createExpress } from './http'
 import createLogger from './log'
@@ -15,6 +16,10 @@ async function main(config: Config): Promise<void> {
   // Initialize logger
   const log = createLogger(ctx)
   ctx.log = log
+
+  // Initialize auth
+  const auth = createAuth(ctx)
+  ctx.auth = auth
 
   // Initialize database connection
   const { mongo, db, model } = await createDatabase(ctx)
