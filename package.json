@@ -1,0 +1,12 @@
+{
+  "name": "herda",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Keep on top of it all with Herda",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "SEE LICENSE IN LICENSE.md"
+}
