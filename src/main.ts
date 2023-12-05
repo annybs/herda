@@ -1,5 +1,6 @@
 import type { SignalConstants } from 'os'
 import { createExpress } from './http'
+import createLogger from './log'
 import process from 'process'
 import type { Config, Context } from './types'
 
@@ -7,8 +8,11 @@ import type { Config, Context } from './types'
  * Server application entrypoint.
  */
 async function main(config: Config): Promise<void> {
-  // Initialize context
+  // Create context
   const ctx = <Context>{ config }
+
+  // Initialize logger
+  ctx.log = createLogger(ctx)
 
   // Initialize Express app
   const app = createExpress(ctx)
@@ -26,20 +30,21 @@ async function main(config: Config): Promise<void> {
         new Promise<void>((res, rej) => {
           server.close(err => {
             if (err) {
-              console.error(err)
+              ctx.log.error(err)
               rej(err)
             } else {
-              console.log('Stopped HTTP server')
+              ctx.log.info('Stopped HTTP server')
               res()
             }
           })
         }),
       ])
 
-      rej(new Error(`Received ${e}`))
+      ctx.log.error(`Received ${e}`)
+      rej()
     }
-    process.on('SIGINT', stop)
-    process.on('SIGTERM', stop)
+    process.on('SIGINT', e => stop(e).catch(rej))
+    process.on('SIGTERM', e => stop(e).catch(rej))
   })
 }
 

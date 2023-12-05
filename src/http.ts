@@ -11,5 +11,11 @@ export function createExpress(ctx: Context) {
   app.post(`${prefix}/account`, account.createAccount(ctx))
   app.delete(`${prefix}/account`, account.deleteAccount(ctx))
 
+  // Log request after handling
+  app.use((req, res, next) => {
+    ctx.log.debug(`[${req.socket.remoteAddress}] ${req.method} ${req.url} ${res.statusCode}`)
+    next()
+  })
+
   return app
 }

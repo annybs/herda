@@ -1,3 +1,5 @@
+import type { Logger } from './log'
+
 export interface Config {
   api: {
     prefix: string
@@ -6,8 +8,12 @@ export interface Config {
     host: string
     port: number
   }
+  log: {
+    level: string
+  }
 }
 
 export interface Context {
   config: Config
+  log: Logger
 }
