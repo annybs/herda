@@ -1,4 +1,5 @@
 import * as account from './account/api'
+import * as herd from './herd/api'
 import type { Context } from './types'
 import express from 'express'
 import type { ErrorRequestHandler, NextFunction, Response } from 'express'
@@ -27,6 +28,12 @@ export function createExpress(ctx: Context) {
   app.get(`${prefix}/account/:id?`, account.getAccount(ctx))
   app.put(`${prefix}/account/:id?`, account.updateAccount(ctx))
   app.delete(`${prefix}/account/:id?`, account.deleteAccount(ctx))
+
+  // Herd APIs
+  app.post(`${prefix}/herd`, herd.createHerd(ctx))
+  app.get(`${prefix}/herd/:id?`, herd.getHerd(ctx))
+  app.put(`${prefix}/herd/:id?`, herd.updateHerd(ctx))
+  app.delete(`${prefix}/herd/:id?`, herd.deleteHerd(ctx))
 
   // Authentication APIs
   app.post(`${prefix}/login/account`, account.loginAccount(ctx))

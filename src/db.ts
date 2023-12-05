@@ -1,7 +1,9 @@
 import type { AccountModel } from './account/model'
 import type { Context } from './types'
+import type { HerdModel } from './herd/model'
 import { MongoClient } from 'mongodb'
 import createAccountModel from './account/model'
+import createHerdModel from './herd/model'
 
 /**
  * Models context.
@@ -9,6 +11,7 @@ import createAccountModel from './account/model'
  */
 export interface Models {
   account: AccountModel
+  herd: HerdModel
 }
 
 /** Create a MongoDB connection and initialize models. */
@@ -22,6 +25,7 @@ async function createDatabase(ctx: Context) {
   const dbCtx = { ...ctx, mongo, db }
   const model = <Models>{
     account: await createAccountModel(dbCtx),
+    herd: await createHerdModel(dbCtx),
   }
 
   return { mongo, db, model }

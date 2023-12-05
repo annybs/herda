@@ -39,7 +39,9 @@ async function createAccountModel(ctx: Context) {
 
   /** Initialize the account collection. */
   async function init() {
-    const exists = await collection.indexExists('unq_email')
+    await ctx.db.createCollection('account')
+
+    const exists = await collection.indexExists('email_1')
     if (!exists) {
       await collection.createIndex({ email: 1 }, { unique: true })
     }
