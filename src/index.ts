@@ -14,6 +14,12 @@ main({
   log: {
     level: process.env.LOG_LEVEL || 'info',
   },
+  mongo: {
+    db: process.env.MONGO_DB || 'herda',
+    uri: process.env.MONGO_URI || 'mongodb://root:root@localhost:27017',
+  },
+  shutdownTimeout: parseInt(process.env.SHUTDOWN_TIMEOUT || '60000'),
 }).catch(err => {
   if (err) console.error(err)
+  process.exit(1)
 })
