@@ -13,7 +13,7 @@ async function createDatabase(ctx: Context) {
 
   const dbCtx = { ...ctx, mongo, db }
   const model = <Models>{
-    account: createAccountModel(dbCtx),
+    account: await createAccountModel(dbCtx),
   }
 
   return { mongo, db, model }
