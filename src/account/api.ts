@@ -7,6 +7,7 @@ import type { WithId } from 'mongodb'
 import type { Account, AccountCreate, AccountUpdate } from './types'
 import { sendBadRequest, sendForbidden, sendNotFound, sendUnauthorized } from '../http'
 
+/** Create an account. */
 export function createAccount({ model }: Context): RequestHandler {
   interface RequestData {
     account: AccountCreate
@@ -44,6 +45,10 @@ export function createAccount({ model }: Context): RequestHandler {
   }
 }
 
+/**
+ * Delete an account.
+ * The request must be verified, and the user may not modify any account other than their own.
+ */
 export function deleteAccount({ model }: Context): AuthRequestHandler {
   interface ResponseData {
     account: WithId<Account>
@@ -70,6 +75,10 @@ export function deleteAccount({ model }: Context): AuthRequestHandler {
   }
 }
 
+/**
+ * Get an account.
+ * The request must be verified, and the user may not access any account other than their own.
+ */
 export function getAccount({ model }: Context): AuthRequestHandler {
   interface ResponseData {
     account: WithId<Account>
@@ -95,6 +104,10 @@ export function getAccount({ model }: Context): AuthRequestHandler {
   }
 }
 
+/**
+ * Log in to an account.
+ * The token returned should be added to the authorization header of subsequent requests.
+ */
 export function loginAccount({ auth, model }: Context): RequestHandler {
   interface RequestData {
     account: Pick<Account, 'email' | 'password'>
@@ -138,6 +151,10 @@ export function loginAccount({ auth, model }: Context): RequestHandler {
   }
 }
 
+/**
+ * Update an account.
+ * The request must be verified, and the user may not modify any account other than their own.
+ */
 export function updateAccount({ model }: Context): AuthRequestHandler {
   interface RequestData {
     account: AccountUpdate

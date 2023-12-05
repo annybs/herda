@@ -6,9 +6,7 @@ import createLogger from './log'
 import process from 'process'
 import type { Config, Context } from './types'
 
-/**
- * Server application entrypoint.
- */
+/** Server application entrypoint. */
 async function main(config: Config): Promise<void> {
   // Create context
   const ctx = <Context>{ config }

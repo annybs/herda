@@ -3,11 +3,17 @@ import { ObjectId } from 'mongodb'
 import crypto from 'crypto'
 import type { Account, AccountCreate, AccountUpdate } from './types'
 
+/** Model for accessing and managing accounts. */
 export type AccountModel = Awaited<ReturnType<typeof createAccountModel>>
 
+/** Create an account model. */
 async function createAccountModel(ctx: Context) {
   const collection = ctx.db.collection<Account>('account')
 
+  /**
+   * Create an account.
+   * The password is automatically hashed.
+   */
   async function create(input: AccountCreate) {
     const passwordSalt = generateSalt()
     const password = hashPassword(input.password, passwordSalt)
@@ -21,14 +27,17 @@ async function createAccountModel(ctx: Context) {
     return await collection.findOne({ _id: result.insertedId })
   }
 
+  /** Generate a salt for use in password hashing. */
   function generateSalt() {
     return crypto.randomBytes(32).toString('hex')
   }
 
+  /** Hash a password. */
   function hashPassword(password: string, salt: string) {
     return crypto.createHmac('sha256', salt).update(password).digest('hex')
   }
 
+  /** Initialize the account collection. */
   async function init() {
     const exists = await collection.indexExists('unq_email')
     if (!exists) {
@@ -36,6 +45,10 @@ async function createAccountModel(ctx: Context) {
     }
   }
 
+  /**
+   * Update an account.
+   * If a password is given, it is automatically hashed with a new salt.
+   */
   async function update(id: ObjectId | string, input: AccountUpdate) {
     const changes = <Partial<Account>>{}
     if (input.email) changes.email = input.email
@@ -51,6 +64,7 @@ async function createAccountModel(ctx: Context) {
     )
   }
 
+  // Initialize on startup
   await init()
 
   return {

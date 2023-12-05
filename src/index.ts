@@ -4,8 +4,13 @@ import main from './main'
 
 dotenv.config()
 
+/**
+ * Some configuration may be dynamically generated at startup.
+ * This private object allows it to be preserved during the application's runtime.
+ */
 const dynamicConfig: Record<string, unknown> = {}
 
+// Run the app
 main({
   api: {
     prefix: process.env.API_PREFIX || '/api',
