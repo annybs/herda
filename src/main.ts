@@ -1,4 +1,4 @@
-import { Config, Context } from "./types";
+import type { Config, Context } from './types'
 
 /**
  * Server application entrypoint.
