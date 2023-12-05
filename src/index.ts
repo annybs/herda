@@ -1,11 +1,28 @@
+import crypto from 'crypto'
 import dotenv from 'dotenv'
 import main from './main'
 
 dotenv.config()
 
+const dynamicConfig: Record<string, unknown> = {}
+
 main({
   api: {
     prefix: process.env.API_PREFIX || '/api',
+  },
+  auth: {
+    jwt: {
+      expiresIn: parseInt(process.env.AUTH_JWT_EXPIRES_IN || '86400'),
+      get secret() {
+        if (process.env.AUTH_JWT_SECRET) return process.env.AUTH_JWT_SECRET
+        if (!dynamicConfig.authJwtSecret) {
+          const secret = crypto.randomBytes(64).toString('hex')
+          console.warn('AUTH_JWT_SECRET not set. Generated a JWT secret for this run only:', secret)
+          dynamicConfig.authJwtSecret = secret
+        }
+        return dynamicConfig.authJwtSecret as string
+      },
+    },
   },
   http: {
     host: process.env.HTTP_HOST || '',

@@ -1,3 +1,4 @@
+import type { Auth } from './auth'
 import type { Logger } from './log'
 import type { Models } from './db'
 import type { Db, MongoClient } from 'mongodb'
@@ -5,6 +6,12 @@ import type { Db, MongoClient } from 'mongodb'
 export interface Config {
   api: {
     prefix: string
+  }
+  auth: {
+    jwt: {
+      expiresIn: number
+      secret: string
+    }
   }
   http: {
     host: string
@@ -21,6 +28,7 @@ export interface Config {
 }
 
 export interface Context {
+  auth: Auth
   config: Config
   db: Db
   log: Logger
