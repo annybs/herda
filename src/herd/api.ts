@@ -6,13 +6,10 @@ import type { WithId } from 'mongodb'
 import type { Herd, HerdCreate, HerdUpdate } from './types'
 import { sendBadRequest, sendForbidden, sendNotFound, sendUnauthorized } from '../http'
 
-/**
- * Create a herd.
- * The request must be verified, and the user may only create a herd in their own account.
- */
+/** Create a herd. */
 export function createHerd({ model }: Context): AuthRequestHandler {
   interface RequestData {
-    herd: Omit<HerdCreate, '_account'>
+    herd: HerdCreate<string>
   }
 
   interface ResponseData {
@@ -21,22 +18,26 @@ export function createHerd({ model }: Context): AuthRequestHandler {
 
   const readRequestData = v.validate<RequestData>({
     herd: {
-      name: v.minLength(1),
+      _account: v.seq(v.str, v.exactLength(24)),
+      name: v.seq(v.str, v.minLength(1)),
     },
   })
 
   return async function (req, res, next) {
-    if (!req.verified) return sendUnauthorized(res, next)
+    if (!req.account) return sendUnauthorized(res, next)
 
     try {
-      const account = await model.account.collection.findOne({ _id: req.accountId })
-      if (!account) return sendUnauthorized(res, next)
-
+      // Read input
       const input = readRequestData(req.body)
 
-      const herd = await model.herd.create({ ...input.herd, _account: req.accountId as ObjectId })
+      // Assert ability to assign herd
+      if (!req.account._id.equals(input.herd._account)) return sendForbidden(res, next)
+
+      // Create herd
+      const herd = await model.herd.create({ ...input.herd, _account: req.account._id })
       if (!herd) return sendNotFound(res, next, { reason: 'unexpectedly failed to get new herd' })
 
+      // Send output
       const output: ResponseData = { herd }
       res.send(output)
       next()
@@ -51,29 +52,26 @@ export function createHerd({ model }: Context): AuthRequestHandler {
   }
 }
 
-/**
- * Delete a herd.
- * The request must be verified, and the user may not modify any herd other than their own.
- */
+/** Delete a herd. */
 export function deleteHerd({ model }: Context): AuthRequestHandler {
   interface ResponseData {
     herd: WithId<Herd>
   }
 
   return async function (req, res, next) {
-    if (!req.verified) return sendUnauthorized(res, next)
-
-    const id = req.params.id
-    if (!id) return sendBadRequest(res, next, { reason: 'no ID' })
+    if (!req.account) return sendUnauthorized(res, next)
 
     try {
-      const herd = await model.herd.collection.findOne({ _id: new ObjectId(id) })
+      // Assert access to herd
+      const herd = await model.herd.collection.findOne({ _id: new ObjectId(req.params.id) })
       if (!herd) return sendNotFound(res, next)
-      if (!req.accountId?.equals(herd._account)) return sendForbidden(res, next)
+      if (!req.account._id.equals(herd._account)) return sendForbidden(res, next)
 
+      // Delete herd
       /** @todo delete related data */
-      await model.herd.collection.deleteOne({ _id: new ObjectId(id) })
+      await model.herd.collection.deleteOne({ _id: herd._id })
 
+      // Send output
       const output: ResponseData = { herd }
       res.send(output)
       next()
@@ -83,26 +81,22 @@ export function deleteHerd({ model }: Context): AuthRequestHandler {
   }
 }
 
-/**
- * Get a herd.
- * The request must be verified, and the user may not access any herd other than their own.
- */
+/** Get a herd. */
 export function getHerd({ model }: Context): AuthRequestHandler {
   interface ResponseData {
     herd: WithId<Herd>
   }
 
   return async function (req, res, next) {
-    if (!req.verified) return sendUnauthorized(res, next)
-
-    const id = req.params.id || req.accountId
-    if (!id) return sendBadRequest(res, next, { reason: 'no ID' })
+    if (!req.account) return sendUnauthorized(res, next)
 
     try {
-      const herd = await model.herd.collection.findOne({ _id: new ObjectId(id) })
+      // Assert access to herd
+      const herd = await model.herd.collection.findOne({ _id: new ObjectId(req.params.id) })
       if (!herd) return sendNotFound(res, next)
-      if (!req.accountId?.equals(herd._account)) return sendForbidden(res, next)
+      if (!req.account._id.equals(herd._account)) return sendForbidden(res, next)
 
+      // Send output
       const output: ResponseData = { herd }
       res.send(output)
       next()
@@ -112,13 +106,10 @@ export function getHerd({ model }: Context): AuthRequestHandler {
   }
 }
 
-/**
- * Update a herd.
- * The request must be verified, and the user may not modify any herd other than their own.
- */
+/** Update a herd. */
 export function updateHerd({ model }: Context): AuthRequestHandler {
   interface RequestData {
-    herd: HerdUpdate
+    herd: HerdUpdate<string>
   }
 
   interface ResponseData {
@@ -127,29 +118,39 @@ export function updateHerd({ model }: Context): AuthRequestHandler {
 
   const readRequestData = v.validate<RequestData>({
     herd: {
-      name: v.minLength(1),
+      _account: v.seq(v.optional, v.str, v.exactLength(24)),
+      name: v.seq(v.optional, v.str, v.minLength(1)),
     },
   })
 
   return async function (req, res, next) {
-    if (!req.verified) return sendUnauthorized(res, next)
-
-    const id = req.params.id || req.accountId
-    if (!id) return sendBadRequest(res, next, { reason: 'no ID' })
+    if (!req.account) return sendUnauthorized(res, next)
 
     try {
+      // Assert access to herd
+      let herd = await model.herd.collection.findOne({ _id: new ObjectId(req.params.id) })
+      if (!herd) return sendNotFound(res, next)
+      if (!req.account._id.equals(herd._account)) return sendForbidden(res, next)
+
+      // Read input
       const input = readRequestData(req.body)
-      if (!input.herd.name) {
+      if (!input.herd._account && !input.herd.name) {
         return sendBadRequest(res, next, { reason: 'no changes' })
       }
 
-      let herd = await model.herd.collection.findOne({ _id: new ObjectId(id) })
-      if (!herd) return sendNotFound(res, next)
-      if (!req.accountId?.equals(herd._account)) return sendForbidden(res, next)
+      // Assert ability to assign herd, if specified in update
+      if (input.herd._account) {
+        if (!req.account._id.equals(input.herd._account)) return sendForbidden(res, next)
+      }
 
-      herd = await model.herd.update(id, input.herd)
+      // Update herd
+      herd = await model.herd.update(herd._id, {
+        ...input.herd,
+        _account: input.herd._account && new ObjectId(input.herd._account) || undefined,
+      })
       if (!herd) return sendNotFound(res, next)
 
+      // Send output
       const output: ResponseData = { herd }
       res.send(output)
       next()
