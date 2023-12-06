@@ -68,8 +68,7 @@ export function deleteHerd({ model }: Context): AuthRequestHandler {
       if (!req.account._id.equals(herd._account)) return sendForbidden(res, next)
 
       // Delete herd
-      /** @todo delete related data */
-      await model.herd.collection.deleteOne({ _id: herd._id })
+      await model.herd.delete(herd._id)
 
       // Send output
       const output: ResponseData = { herd }

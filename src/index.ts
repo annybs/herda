@@ -10,6 +10,9 @@ dotenv.config()
  */
 const dynamicConfig: Record<string, unknown> = {}
 
+/** String truthy values. */
+const TRUE = ['1', 't', 'y', 'on', 'yes', 'true']
+
 // Run the app
 main({
   api: {
@@ -39,6 +42,7 @@ main({
   mongo: {
     db: process.env.MONGO_DB || 'herda',
     uri: process.env.MONGO_URI || 'mongodb://root:root@localhost:27017',
+    useTransactions: TRUE.includes(process.env.MONGO_USE_TRANSACTIONS || 'false'),
   },
   shutdownTimeout: parseInt(process.env.SHUTDOWN_TIMEOUT || '60000'),
 }).catch(err => {
