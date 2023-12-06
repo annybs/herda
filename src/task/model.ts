@@ -24,6 +24,7 @@ async function createTaskModel(ctx: Context) {
       _account: input._account,
       description: input.description,
       position,
+      done: Boolean(input.done),
     })
 
     return await collection.findOne({ _id: result.insertedId })
@@ -129,6 +130,7 @@ async function createTaskModel(ctx: Context) {
     if (input._account) changes._account = input._account
     if (input.description) changes.description = input.description
     if (input.position !== undefined) changes.position = input.position
+    if (input.done !== undefined) changes.done = input.done
 
     return collection.findOneAndUpdate(
       { _id: new ObjectId(id) },

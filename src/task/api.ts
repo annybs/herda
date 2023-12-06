@@ -23,6 +23,7 @@ export function createTask({ model }: Context): AuthRequestHandler {
       _account: v.seq(v.str, v.exactLength(24)),
       description: v.seq(v.str, v.minLength(1)),
       position: v.seq(v.optional, v.numeric, v.min(1)),
+      done: v.seq(v.optional, v.bool),
     },
   })
 
@@ -216,6 +217,34 @@ export function searchTasks({ model }: Context): AuthRequestHandler {
   }
 }
 
+export function toggleTaskDone({ model }: Context): AuthRequestHandler {
+  type ResponseData = {
+    task: WithId<Task>
+  }
+
+  return async function (req, res, next) {
+    if (!req.account) return sendUnauthorized(res, next)
+
+    try {
+      // Assert access to task
+      let task = await model.task.collection.findOne({ _id: new ObjectId(req.params.id) })
+      if (!task) return sendNotFound(res, next)
+      if (!req.account._id.equals(task._account)) return sendForbidden(res, next)
+
+      // Update to switch task done status
+      task = await model.task.collection.findOneAndUpdate({ _id: task._id }, { $set: { done: !task.done }}, { returnDocument: 'after' })
+      if (!task) throw new Error('failed to get updated task')
+
+      // Send output
+      const output: ResponseData = { task }
+      res.send(output)
+      next()
+    } catch (err) {
+      next(err)
+    }
+  }
+}
+
 /** Update a task. */
 export function updateTask({ model }: Context): AuthRequestHandler {
   interface RequestData {
@@ -232,6 +261,7 @@ export function updateTask({ model }: Context): AuthRequestHandler {
       _account: v.seq(v.optional, v.str, v.exactLength(24)),
       description: v.seq(v.optional, v.str, v.minLength(1)),
       position: v.seq(v.optional, v.numeric, v.min(1)),
+      done: v.seq(v.optional, v.bool),
     },
   })
 
