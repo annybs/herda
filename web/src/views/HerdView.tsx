@@ -215,7 +215,7 @@ export default function HerdView() {
               </FormInput>
 
               <ButtonSet>
-                <SaveButton type="submit" />
+                <SaveButton type="submit" className="fill" />
                 <ResetButton type="reset" />
               </ButtonSet>
             </FormGroup>
