@@ -143,6 +143,7 @@ export function moveTask({ model }: Context): AuthRequestHandler {
       if (!task) return sendNotFound(res, next)
       if (!req.account._id.equals(task._account)) return sendForbidden(res, next)
 
+      // Update task
       const result = await model.task.move(task._id, position)
 
       // Send output
@@ -217,6 +218,10 @@ export function searchTasks({ model }: Context): AuthRequestHandler {
   }
 }
 
+/**
+ * Toggle task done flag.
+ * If the task is not done, it will become done, and vice versa.
+ */
 export function toggleTaskDone({ model }: Context): AuthRequestHandler {
   type ResponseData = {
     task: WithId<Task>
