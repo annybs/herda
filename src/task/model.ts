@@ -24,6 +24,11 @@ async function createTaskModel(ctx: Context) {
   /** Initialize the task collection. */
   async function init() {
     await ctx.db.createCollection('task')
+
+    const exists = await collection.indexExists('task_text')
+    if (!exists) {
+      await collection.createIndex({ description: 'text' }, { name: 'task_text' })
+    }
   }
 
   /**
