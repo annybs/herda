@@ -45,7 +45,7 @@ export interface LoginAccountRequest {
 /** Account login response data. */
 export interface LoginAccountResponse {
   token: string
-  account: Account
+  account: WithId<Account>
 }
 
 /** Update account request data. */

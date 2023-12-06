@@ -1,0 +1,70 @@
+$font-primary: 'Work Sans', Helvetica, Arial, sans-serif;
+
+$font-size: 13pt;
+$font-size-s: 0.8rem;
+$font-size-m: 1rem;
+$font-size-l: 1.4rem;
+$font-size-xl: 1.8rem;
+
+$font-weight: 400;
+$font-weight-bold: 700;
+
+$border-size-input: 0.1rem;
+$border-width-s: 0.1rem;
+
+$padding-box: 0.5rem;
+
+$radius-box: 0.2rem;
+$radius-input: 0.2rem;
+
+$radius-s: 0.2rem;
+$radius-l: 0.6rem;
+
+$space-xs: 0.25rem;
+$space-s: 0.5rem;
+$space-sm: 0.75rem;
+$space-m: 1rem;
+$space-ml: 1.25rem;
+$space-l: 1.5rem;
+$space-ll: 1.75rem;
+$space-xl: 2rem;
+
+:root {
+  --color-bg-alt: #282828;
+  --color-bg: #343434;
+  --color-border: #494949;
+  --color-cta: #449055;
+  --color-focus: #dddddd;
+  --color-inactive: #909090;
+  --color-inactive-fg: #494949;
+  --color-negative-fg: #dddddd;
+  --color-negative: #d84c4c;
+  --color-fg-alt: #b5b5b5;
+  --color-fg: #dddddd;
+  --color-positive-fg: #dddddd;
+  --color-positive: #449055;
+  --color-shadow: #202020;
+  --color-warn-fg: #343434;
+  --color-warn: #f3af2f;
+
+  @media (prefers-color-scheme: light) {
+    // light colours todo
+  }
+}
+
+@mixin bold {
+  font-weight: $font-weight-bold;
+}
+
+@mixin filler {
+  $size: 5px;
+  $thickness: 3px;
+  background-color: var(--color-bg);
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-bg-alt),
+    var(--color-bg-alt) $thickness,
+    var(--color-bg) $thickness,
+    var(--color-bg) $size
+  );
+}

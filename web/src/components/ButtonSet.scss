@@ -1,0 +1,22 @@
+@import '../vars.scss';
+
+.button-set {
+  display: flex;
+  flex-direction: row;
+
+  &.center {
+    justify-content: center;
+  }
+
+  &.right {
+    justify-content: end;
+  }
+
+  button {
+    margin-left: $space-s;
+
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+}

@@ -1,0 +1,21 @@
+@import '@/vars.scss';
+
+.row.task {
+  background-color: var(--color-bg-alt);
+  border-width: 0;
+  border-radius: $radius-s;
+  margin: $space-s 0;
+  padding: $space-s $space-m;
+
+  .position {
+    background: var(--color-bg);
+    border-radius: $radius-l;
+    margin-right: $space-s;
+    padding: 0 $space-s;
+    text-align: center;
+  }
+
+  .description {
+    flex-grow: 1;
+  }
+}

@@ -1,0 +1,22 @@
+@import '../vars.scss';
+
+.loading-indicator {
+  align-items: center;
+  display: inline-flex;
+  flex-direction: row;
+
+  svg {
+    animation: 0.5s linear infinite spin;
+    margin-right: $space-xs;
+    width: 20px;
+  }
+}
+
+@keyframes spin {
+  from {
+    rotate: 0deg;
+  }
+  to {
+    rotate: 180deg;
+  }
+}

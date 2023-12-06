@@ -1,0 +1,27 @@
+@import '@/vars.scss';
+@import './mixins.scss';
+
+/**
+ * Auto-growing textarea.
+ * Based on https://css-tricks.com/the-cleanest-trick-for-autogrowing-textareas/
+ */
+.growing-text-input {
+  display: grid;
+
+  &::after {
+    @include input;
+    content: attr(data-replicated-value) " ";
+    visibility: hidden;
+    white-space: pre-wrap;
+  }
+
+  textarea {
+    resize: none;
+    overflow: hidden;
+  }
+
+  textarea,
+  &::after {
+    grid-area: 1 / 1 / 2 / 2;
+  }
+}

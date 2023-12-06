@@ -1,0 +1,57 @@
+@import '@/vars.scss';
+@import './mixins.scss';
+
+.input {
+  display: flex;
+  flex-direction: column;
+  font: inherit;
+
+  label {
+    margin-left: $space-s;
+    margin-bottom: $space-xs;
+  }
+
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="text"],
+  textarea {
+    @include input;
+  }
+
+  select {
+    background-color: var(--color-bg);
+    border: $border-width-s solid var(--color-bg);
+    border-radius: $radius-s;
+    box-sizing: border-box;
+    color: var(--color-fg);
+    font: inherit;
+    padding: $space-xs $space-s;
+    width: 100%;
+
+    &:disabled {
+      color: var(--color-inactive);
+      cursor: not-allowed;
+    }
+
+    &:focus {
+      border-color: var(--color-focus);
+      outline: none;
+    }
+  }
+
+  .chip {
+    margin: $space-s 0 0;
+  }
+
+  .row {
+    input {
+      flex-grow: 1;
+    }
+
+    .button-set {
+      margin-left: $space-s;
+      margin-top: 0;
+    }
+  }
+}

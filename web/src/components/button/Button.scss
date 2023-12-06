@@ -1,0 +1,113 @@
+@import '@/vars.scss';
+
+.button {
+  --bg: var(--color-bg-alt);
+  --border: rgba(0, 0, 0, 0);
+  --fg: var(--color-fg);
+
+  &.negative { --fg: var(--color-negative); }
+  &.positive { --fg: var(--color-positive); }
+  &.warn { --fg: var(--color-warn); }
+
+  &.fill, &:hover:not(:disabled) {
+    --bg: var(--color-fg);
+    --border: var(--color-fg);
+    --fg: var(--color-bg);
+
+    &.negative {
+      --bg: var(--color-negative);
+      --border: var(--color-negative);
+      --fg: var(--color-negative-fg);
+    }
+
+    &.positive {
+      --bg: var(--color-positive);
+      --border: var(--color-positive);
+      --fg: var(--color-positive-fg);
+    }
+
+    &.warn {
+      --bg: var(--color-warn);
+      --border: var(--color-warn);
+      --fg: var(--color-warn-fg);
+    }
+  }
+
+  &.outline {
+    --bg: var(--color-bg-alt);
+    --border: var(--color-fg);
+    --fg: var(--color-fg);
+
+    &.negative {
+      --border: var(--color-negative);
+      --fg: var(--color-negative);
+    }
+
+    &.positive {
+      --border: var(--color-positive);
+      --fg: var(--color-positive);
+    }
+
+    &.warn {
+      --border: var(--color-warn);
+      --fg: var(--color-warn);
+    }
+  }
+
+  $move: 2px;
+
+  align-items: center;
+  border-radius: $radius-s;
+  border-style: solid;
+  border-width: $border-width-s;
+  // box-shadow: $move $move var(--color-shadow);
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: row;
+  font-size: inherit;
+  height: fit-content;
+  line-height: normal;
+  padding: $space-xs $space-s;
+
+  background-color: var(--bg);
+  border-color: var(--border);
+  color: var(--fg);
+
+  &:hover:not(:disabled) {
+    background-color: var(--bg);
+    border-color: var(--border);
+    color: var(--fg);
+    box-shadow: $move $move var(--color-shadow);
+    position: relative;
+    left: -$move;
+    top: -$move;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &.mini {
+    font-size: $font-size-s;
+    height: fit-content;
+    padding: 0 $space-xs;
+  }
+
+  // Note: using `<Button wide>` may affect the appearance of any icons used within
+  &.wide {
+    display: inline-block;
+    width: 100%;
+  }
+
+  svg {
+    align-self: center;
+    width: 20px;
+  }
+
+  span ~ svg,
+  svg ~ span {
+    margin-left: $space-xs;
+  }
+}

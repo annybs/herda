@@ -70,7 +70,7 @@ export interface SearchParams {
 }
 
 export interface SearchResponse<T> {
-  results: T
+  results: T[]
   metadata: {
     limit: number
     page: number

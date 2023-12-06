@@ -5,7 +5,7 @@ import { useConnection } from '@/hooks'
 import { createContext, createElement, useLayoutEffect, useState } from 'react'
 
 export interface SessionData {
-  account?: api.Account
+  account?: api.WithId<api.Account>
   loggedIn?: boolean
   ready?: boolean
 }
@@ -23,7 +23,7 @@ export interface SessionState extends SessionData {
 export function SessionProvider({ children, value: { authStorage } }: ProviderProps<SessionProps>) {
   const { options, setToken } = useConnection()
 
-  const [account, setAccount] = useState<api.Account>()
+  const [account, setAccount] = useState<api.WithId<api.Account>>()
   const [loggedIn, setLoggedIn] = useState(false)
   const [ready, setReady] = useState(false)
 

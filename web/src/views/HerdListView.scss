@@ -1,0 +1,13 @@
+@import '@/vars.scss';
+
+.row.herd {
+  background-color: var(--color-bg-alt);
+  border-width: 0;
+  border-radius: $radius-s;
+  margin: $space-s 0;
+  padding: $space-s $space-m;
+
+  a {
+    color: var(--color-text);
+  }
+}

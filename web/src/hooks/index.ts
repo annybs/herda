@@ -3,6 +3,8 @@ import { DocumentContext } from '@/providers/document'
 import { SessionContext } from '@/providers/session'
 import { useContext } from 'react'
 
+export { useRouteSearch } from './routeSearch'
+
 export function useConnection() {
   return useContext(ConnectionContext)
 }

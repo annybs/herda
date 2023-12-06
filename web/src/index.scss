@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import 'vars.scss';
+@import 'modern-normalize.min.css';
+
+html {
+  font-size: $font-size;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-family: $font-primary;
+  font-weight: $font-weight;
+  line-height: 1.4em;
+}
+
+a {
+  color: var(--color-cta);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+em {
+  @include bold;
+}
