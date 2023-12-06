@@ -1,9 +1,10 @@
-import * as v from '../validate'
 import type { AuthRequestHandler } from '../auth'
 import type { Context } from '../types'
 import { ObjectId } from 'mongodb'
+import type { SearchResult } from '../api'
 import type { WithId } from 'mongodb'
 import type { Herd, HerdCreate, HerdUpdate } from './types'
+import { query, validate as v } from '@edge/misc-utils'
 import { sendBadRequest, sendForbidden, sendNotFound, sendUnauthorized } from '../http'
 
 /** Create a herd. */
@@ -101,6 +102,53 @@ export function getHerd({ model }: Context): AuthRequestHandler {
       next()
     } catch (err) {
       return next(err)
+    }
+  }
+}
+
+/** Search herds. */
+export function searchHerds({ model }: Context): AuthRequestHandler {
+  type ResponseData = SearchResult<{
+    herd: WithId<Herd>
+  }>
+
+  return async function (req, res, next) {
+    if (!req.account) return sendUnauthorized(res, next)
+
+    // Read parameters
+    const limit = query.integer(req.query.limit, 1, 100) || 10
+    const page = query.integer(req.query.page, 1) || 1
+    const search = query.str(req.query.search)
+    const sort = query.sorts(req.query.sort, ['name'], ['name', 'ASC'])
+
+    // Build filter and skip
+    const filter: Record<string, unknown> = {
+      _account: req.account._id,
+    }
+    if (search) filter.$text = { $search: search }
+    const skip = (page - 1) * limit
+
+    try {
+      // Get total documents count for filter
+      const totalCount = await model.herd.collection.countDocuments(filter)
+
+      // Build cursor
+      let cursor = model.herd.collection.find(filter)
+      for (const [prop, dir] of sort) {
+        cursor = cursor.sort(prop, dir === 'ASC' ? 1 : -1)
+      }
+      cursor = cursor.skip(skip).limit(limit)
+
+      // Get results and send output
+      const data = await cursor.toArray()
+      const output: ResponseData = {
+        results: data.map(herd => ({ herd })),
+        metadata: { limit, page, totalCount },
+      }
+      res.send(output)
+      next()
+    } catch (err) {
+      next(err)
     }
   }
 }

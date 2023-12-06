@@ -1,8 +1,8 @@
-import * as v from '../validate'
 import type { AuthRequestHandler } from '../auth'
 import type { Context } from '../types'
 import { ObjectId } from 'mongodb'
 import type { WithId } from 'mongodb'
+import { validate as v } from '@edge/misc-utils'
 import type { Task, TaskCreate, TaskUpdate } from './types'
 import { sendBadRequest, sendForbidden, sendNotFound, sendUnauthorized } from '../http'
 

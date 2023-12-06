@@ -21,6 +21,7 @@ export function createExpress(ctx: Context) {
   app.delete(`${prefix}/account/:id?`, account.deleteAccount(ctx))
 
   // Herd APIs
+  app.get(`${prefix}/herds`, herd.searchHerds(ctx))
   app.post(`${prefix}/herd`, herd.createHerd(ctx))
   app.get(`${prefix}/herd/:id`, herd.getHerd(ctx))
   app.put(`${prefix}/herd/:id`, herd.updateHerd(ctx))

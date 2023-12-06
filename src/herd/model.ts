@@ -25,9 +25,14 @@ async function createHerdModel(ctx: Context) {
   async function init() {
     await ctx.db.createCollection('herd')
 
-    const exists = await collection.indexExists('_account_1_name_1')
+    let exists = await collection.indexExists('herd_unq_account_name')
     if (!exists) {
-      await collection.createIndex({ _account: 1, name: 1 }, { unique: true })
+      await collection.createIndex({ _account: 1, name: 1 }, { name: 'herd_unq_account_name', unique: true })
+    }
+
+    exists = await collection.indexExists('herd_text')
+    if (!exists) {
+      await collection.createIndex({ name: 'text' }, { name: 'herd_text' })
     }
   }
 
