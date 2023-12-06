@@ -22,7 +22,7 @@ export function createTask({ model }: Context): AuthRequestHandler {
       _herd: v.seq(v.str, v.exactLength(24)),
       _account: v.seq(v.str, v.exactLength(24)),
       description: v.seq(v.str, v.minLength(1)),
-      position: v.seq(v.numeric, v.min(1)),
+      position: v.seq(v.optional, v.numeric, v.min(1)),
     },
   })
 
@@ -115,6 +115,49 @@ export function getTask({ model }: Context): AuthRequestHandler {
   }
 }
 
+/**
+ * Move task within a herd.
+ * This updates the task's position, and also updates the position of any tasks after it.
+ */
+export function moveTask({ model }: Context): AuthRequestHandler {
+  interface ResponseData {
+    task: WithId<Task>
+    tasks: {
+      /** Number of tasks affected, including the original task */
+      affectedCount: number
+    }
+  }
+
+  return async function (req, res, next) {
+    if (!req.account) return sendUnauthorized(res, next)
+
+    try {
+      // Read position parameter
+      if (!req.params.position) return sendBadRequest(res, next)
+      const position = parseInt(req.params.position)
+      if (isNaN(position) || position < 1) return sendBadRequest(res, next)
+
+      // Assert access to task
+      const task = await model.task.collection.findOne({ _id: new ObjectId(req.params.id) })
+      if (!task) return sendNotFound(res, next)
+      if (!req.account._id.equals(task._account)) return sendForbidden(res, next)
+
+      const result = await model.task.move(task._id, position)
+
+      // Send output
+      const output: ResponseData = {
+        task: result.task,
+        tasks: {
+          affectedCount: result.affectedCount,
+        },
+      }
+      res.send(output)
+      next()
+    } catch (err) {
+      return next(err)
+    }
+  }
+}
 
 /** Search tasks. */
 export function searchTasks({ model }: Context): AuthRequestHandler {

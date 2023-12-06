@@ -35,6 +35,9 @@ export function createExpress(ctx: Context) {
   app.put(`${prefix}/task/:id`, task.updateTask(ctx))
   app.delete(`${prefix}/task/:id`, task.deleteTask(ctx))
 
+  // Task patch APIs
+  app.patch(`${prefix}/task/:id/move/:position`, task.moveTask(ctx))
+
   // Authentication APIs
   app.post(`${prefix}/login/account`, account.loginAccount(ctx))
 

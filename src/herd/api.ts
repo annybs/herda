@@ -57,6 +57,10 @@ export function createHerd({ model }: Context): AuthRequestHandler {
 export function deleteHerd({ model }: Context): AuthRequestHandler {
   interface ResponseData {
     herd: WithId<Herd>
+    /** Number of tasks deleted */
+    tasks: {
+      deletedCount: number
+    }
   }
 
   return async function (req, res, next) {
@@ -69,10 +73,15 @@ export function deleteHerd({ model }: Context): AuthRequestHandler {
       if (!req.account._id.equals(herd._account)) return sendForbidden(res, next)
 
       // Delete herd
-      await model.herd.delete(herd._id)
+      const result = await model.herd.delete(herd._id)
 
       // Send output
-      const output: ResponseData = { herd }
+      const output: ResponseData = {
+        herd: result.herd as WithId<Herd>,
+        tasks: {
+          deletedCount: result.deletedCount,
+        },
+      }
       res.send(output)
       next()
     } catch (err) {

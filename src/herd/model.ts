@@ -47,9 +47,9 @@ async function createHerdModel(ctx: Context) {
     const { deletedCount } = await taskCollection.deleteMany({ _herd: id })
 
     // Delete herd
-    await collection.deleteOne({ _id: id })
+    const herd = await collection.findOneAndDelete({ _id: id })
 
-    return deletedCount
+    return { herd, deletedCount }
   }
 
   /** Delete a herd using a transaction. */
@@ -62,11 +62,11 @@ async function createHerdModel(ctx: Context) {
       const { deletedCount } = await taskCollection.deleteMany({ _herd: id }, { session })
 
       // Delete herd
-      await collection.deleteOne({ _id: id })
+      const herd = await collection.findOneAndDelete({ _id: id })
 
       // Commit and return
       await session.commitTransaction()
-      return deletedCount
+      return { herd, deletedCount }
     } catch (err) {
       await session.abortTransaction()
       throw err
