@@ -32,6 +32,7 @@ main({
       },
     },
   },
+  cors: undefined,
   http: {
     host: process.env.HTTP_HOST || '',
     port: parseInt(process.env.HTTP_PORT || '5001'),

@@ -3,14 +3,16 @@ import * as herd from './herd/api'
 import * as task from './task/api'
 import type { Context } from './types'
 import type { ErrorRequestHandler } from 'express'
+import cors from 'cors'
 import express from 'express'
 import { http } from '@edge/misc-utils'
 
 /** Create an Express application. */
 function createExpress(ctx: Context) {
-  // Initialize app with JSON and auth middleware
+  // Initialize app with JSON, CORS, and auth middleware
   const app = express()
   app.use(express.json())
+  app.use(cors(ctx.config.cors))
   app.use(ctx.auth.verifyRequestMiddleware)
 
   const prefix = ctx.config.api.prefix

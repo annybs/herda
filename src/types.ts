@@ -1,6 +1,7 @@
 import type { Auth } from './auth'
 import type { Logger } from './log'
 import type { Models } from './db'
+import type cors from 'cors'
 import type { Db, MongoClient } from 'mongodb'
 
 /** Application configuration context. */
@@ -20,6 +21,14 @@ export interface Config {
       secret: string
     }
   }
+  /**
+   * CORS options.
+   * At the moment, this is always undefined for default usage; a future update should add support for configuration
+   * via environment variables.
+   *
+   * @see https://www.npmjs.com/package/cors#usage
+   */
+  cors: Parameters<typeof cors>[0]
   http: {
     /** HTTP bind host (default: empty) */
     host: string
