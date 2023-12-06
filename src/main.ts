@@ -1,7 +1,7 @@
 import type { SignalConstants } from 'os'
 import createAuth from './auth'
 import createDatabase from './db'
-import { createExpress } from './http'
+import createExpress from './http'
 import createLogger from './log'
 import process from 'process'
 import type { Config, Context } from './types'

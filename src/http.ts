@@ -2,11 +2,12 @@ import * as account from './account/api'
 import * as herd from './herd/api'
 import * as task from './task/api'
 import type { Context } from './types'
+import type { ErrorRequestHandler } from 'express'
 import express from 'express'
-import type { ErrorRequestHandler, NextFunction, Response } from 'express'
+import { http } from '@edge/misc-utils'
 
 /** Create an Express application. */
-export function createExpress(ctx: Context) {
+function createExpress(ctx: Context) {
   // Initialize app with JSON and auth middleware
   const app = express()
   app.use(express.json())
@@ -45,7 +46,7 @@ export function createExpress(ctx: Context) {
   // Add middleware to handle any errors forwarded from previous handlers via `next(err)`
   const catchError: ErrorRequestHandler = (err, req, res, next) => {
     if (!res.headersSent) {
-      sendInternalServerError(res, next, { reason: (err as Error).message })
+      http.internalServerError(res, next, { reason: (err as Error).message })
     }
     ctx.log.error(err)
   }
@@ -60,32 +61,4 @@ export function createExpress(ctx: Context) {
   return app
 }
 
-/** Send a 400 Bad Request error response. */
-export function sendBadRequest(res: Response, next: NextFunction, data?: Record<string, unknown>) {
-  res.status(400).send({ message: 'Bad Request', ...data })
-  next()
-}
-
-/** Send a 403 Forbidden error response. */
-export function sendForbidden(res: Response, next: NextFunction, data?: Record<string, unknown>) {
-  res.status(403).send({ message: 'Forbidden', ...data })
-  next()
-}
-
-/** Send a 500 Internal Server Error response. */
-export function sendInternalServerError(res: Response, next: NextFunction, data?: Record<string, unknown>) {
-  res.status(500).send({ message: 'Internal Server Error', ...data })
-  next()
-}
-
-/** Send a 404 Not Found error response. */
-export function sendNotFound(res: Response, next: NextFunction, data?: Record<string, unknown>) {
-  res.status(404).send({ message: 'Not Found', ...data })
-  next()
-}
-
-/** Send a 401 Unauthorized error response. */
-export function sendUnauthorized(res: Response, next: NextFunction, data?: Record<string, unknown>) {
-  res.status(401).send({ message: 'Unauthorized', ...data })
-  next()
-}
+export default createExpress

@@ -4,8 +4,7 @@ import { ObjectId } from 'mongodb'
 import type { SearchResult } from '../api'
 import type { WithId } from 'mongodb'
 import type { Task, TaskCreate, TaskUpdate } from './types'
-import { query, validate as v } from '@edge/misc-utils'
-import { sendBadRequest, sendForbidden, sendNotFound, sendUnauthorized } from '../http'
+import { http, query, validate as v } from '@edge/misc-utils'
 
 /** Create a task. */
 export function createTask({ model }: Context): AuthRequestHandler {
@@ -28,26 +27,26 @@ export function createTask({ model }: Context): AuthRequestHandler {
   })
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     try {
       // Read input
       const input = readRequestData(req.body)
 
       // Assert ability to assign task
-      if (!req.account._id.equals(input.task._account)) return sendForbidden(res, next)
+      if (!req.account._id.equals(input.task._account)) return http.forbidden(res, next)
 
       // Assert access to herd
       const herd = await model.herd.collection.findOne({ _id: new ObjectId(input.task._herd) })
-      if (!herd) return sendNotFound(res, next, { reason: 'herd not found' })
-      if (!req.account._id.equals(herd._account)) return sendForbidden(res, next)
+      if (!herd) return http.notFound(res, next, { reason: 'herd not found' })
+      if (!req.account._id.equals(herd._account)) return http.forbidden(res, next)
 
       const task = await model.task.create({
         ...input.task,
         _herd: new ObjectId(input.task._herd),
         _account: new ObjectId(input.task._account),
       })
-      if (!task) return sendNotFound(res, next, { reason: 'unexpectedly failed to get new task' })
+      if (!task) return http.notFound(res, next, { reason: 'unexpectedly failed to get new task' })
 
       const output: ResponseData = { task }
       res.send(output)
@@ -56,7 +55,7 @@ export function createTask({ model }: Context): AuthRequestHandler {
       const name = (err as Error).name
       if (name === 'ValidateError') {
         const ve = err as v.ValidateError
-        return sendBadRequest(res, next, { param: ve.param, reason: ve.message })
+        return http.badRequest(res, next, { param: ve.param, reason: ve.message })
       }
       return next(err)
     }
@@ -70,13 +69,13 @@ export function deleteTask({ model }: Context): AuthRequestHandler {
   }
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     try {
       // Assert access to task
       const task = await model.task.collection.findOne({ _id: new ObjectId(req.params.id) })
-      if (!task) return sendNotFound(res, next)
-      if (!req.account._id.equals(task._account)) return sendForbidden(res, next)
+      if (!task) return http.notFound(res, next)
+      if (!req.account._id.equals(task._account)) return http.forbidden(res, next)
 
       // Delete task
       await model.task.collection.deleteOne({ _id: task._id })
@@ -98,13 +97,13 @@ export function getTask({ model }: Context): AuthRequestHandler {
   }
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     try {
       // Assert access to task
       const task = await model.task.collection.findOne({ _id: new ObjectId(req.params.id) })
-      if (!task) return sendNotFound(res, next)
-      if (!req.account._id.equals(task._account)) return sendForbidden(res, next)
+      if (!task) return http.notFound(res, next)
+      if (!req.account._id.equals(task._account)) return http.forbidden(res, next)
 
       // Send output
       const output: ResponseData = { task }
@@ -130,18 +129,18 @@ export function moveTask({ model }: Context): AuthRequestHandler {
   }
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     try {
       // Read position parameter
-      if (!req.params.position) return sendBadRequest(res, next)
+      if (!req.params.position) return http.badRequest(res, next)
       const position = parseInt(req.params.position)
-      if (isNaN(position) || position < 1) return sendBadRequest(res, next)
+      if (isNaN(position) || position < 1) return http.badRequest(res, next)
 
       // Assert access to task
       const task = await model.task.collection.findOne({ _id: new ObjectId(req.params.id) })
-      if (!task) return sendNotFound(res, next)
-      if (!req.account._id.equals(task._account)) return sendForbidden(res, next)
+      if (!task) return http.notFound(res, next)
+      if (!req.account._id.equals(task._account)) return http.forbidden(res, next)
 
       // Update task
       const result = await model.task.move(task._id, position)
@@ -168,7 +167,7 @@ export function searchTasks({ model }: Context): AuthRequestHandler {
   }>
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     // Read parameters
     const herd = req.params.herd || undefined
@@ -187,7 +186,7 @@ export function searchTasks({ model }: Context): AuthRequestHandler {
       try {
         filter._herd = new ObjectId(herd)
       } catch (err) {
-        return sendBadRequest(res, next, { reason: 'invalid herd' })
+        return http.badRequest(res, next, { reason: 'invalid herd' })
       }
     }
     if (search) filter.$text = { $search: search }
@@ -228,13 +227,13 @@ export function toggleTaskDone({ model }: Context): AuthRequestHandler {
   }
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     try {
       // Assert access to task
       let task = await model.task.collection.findOne({ _id: new ObjectId(req.params.id) })
-      if (!task) return sendNotFound(res, next)
-      if (!req.account._id.equals(task._account)) return sendForbidden(res, next)
+      if (!task) return http.notFound(res, next)
+      if (!req.account._id.equals(task._account)) return http.forbidden(res, next)
 
       // Update to switch task done status
       task = await model.task.collection.findOneAndUpdate({ _id: task._id }, { $set: { done: !task.done }}, { returnDocument: 'after' })
@@ -271,30 +270,30 @@ export function updateTask({ model }: Context): AuthRequestHandler {
   })
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     try {
       // Assert access to task
       let task = await model.task.collection.findOne({ _id: new ObjectId(req.params.id) })
-      if (!task) return sendNotFound(res, next)
-      if (!req.account._id.equals(task._account)) return sendForbidden(res, next)
+      if (!task) return http.notFound(res, next)
+      if (!req.account._id.equals(task._account)) return http.forbidden(res, next)
 
       // Read input
       const input = readRequestData(req.body)
       if (Object.keys(input.task).length < 1) {
-        return sendBadRequest(res, next, { reason: 'no changes' })
+        return http.badRequest(res, next, { reason: 'no changes' })
       }
 
       // Assert ability to assign task, if specified in update
       if (input.task._account) {
-        if (!req.account._id.equals(input.task._account)) return sendForbidden(res, next)
+        if (!req.account._id.equals(input.task._account)) return http.forbidden(res, next)
       }
 
       // Assert access to herd, if specified in update
       if (input.task._herd) {
         const herd = await model.task.collection.findOne({ _id: new ObjectId(input.task._herd) })
-        if (!herd) return sendNotFound(res, next, { reason: 'herd not found' })
-        if (!req.account._id.equals(herd._account)) return sendForbidden(res, next)
+        if (!herd) return http.notFound(res, next, { reason: 'herd not found' })
+        if (!req.account._id.equals(herd._account)) return http.forbidden(res, next)
       }
 
       // Update task
@@ -303,7 +302,7 @@ export function updateTask({ model }: Context): AuthRequestHandler {
         _herd: input.task._herd && new ObjectId(input.task._herd) || undefined,
         _account: input.task._account && new ObjectId(input.task._account) || undefined,
       })
-      if (!task) return sendNotFound(res, next)
+      if (!task) return http.notFound(res, next)
 
       // Send output
       const output: ResponseData = { task }
@@ -313,7 +312,7 @@ export function updateTask({ model }: Context): AuthRequestHandler {
       const name = (err as Error).name
       if (name === 'ValidateError') {
         const ve = err as v.ValidateError
-        return sendBadRequest(res, next, { param: ve.param, reason: ve.message })
+        return http.badRequest(res, next, { param: ve.param, reason: ve.message })
       }
       return next(err)
     }

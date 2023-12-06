@@ -3,9 +3,8 @@ import type { Context } from '../types'
 import { ObjectId } from 'mongodb'
 import type { RequestHandler } from 'express'
 import type { WithId } from 'mongodb'
-import { validate as v } from '@edge/misc-utils'
 import type { Account, AccountCreate, AccountUpdate } from './types'
-import { sendBadRequest, sendForbidden, sendNotFound, sendUnauthorized } from '../http'
+import { http, validate as v } from '@edge/misc-utils'
 
 /** Create an account. */
 export function createAccount({ model }: Context): RequestHandler {
@@ -29,7 +28,7 @@ export function createAccount({ model }: Context): RequestHandler {
       const input = readRequestData(req.body)
 
       const account = await model.account.create(input.account)
-      if (!account) return sendNotFound(res, next, { reason: 'unexpectedly failed to get new account' })
+      if (!account) return http.notFound(res, next, { reason: 'unexpectedly failed to get new account' })
 
       const output: ResponseData = { account }
       res.send(output)
@@ -38,7 +37,7 @@ export function createAccount({ model }: Context): RequestHandler {
       const name = (err as Error).name
       if (name === 'ValidateError') {
         const ve = err as v.ValidateError
-        return sendBadRequest(res, next, { param: ve.param, reason: ve.message })
+        return http.badRequest(res, next, { param: ve.param, reason: ve.message })
       }
       return next(err)
     }
@@ -52,18 +51,18 @@ export function deleteAccount({ model }: Context): AuthRequestHandler {
   }
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     // Get account ID and assert access
     const id = req.params.id || req.account._id
-    if (!id) return sendBadRequest(res, next)
-    if (!req.account._id.equals(id)) return sendForbidden(res, next)
+    if (!id) return http.badRequest(res, next)
+    if (!req.account._id.equals(id)) return http.forbidden(res, next)
 
     try {
       // Delete account
       /** @todo delete related data */
       const account = await model.account.collection.findOneAndDelete({ _id: new ObjectId(id) })
-      if (!account) return sendNotFound(res, next)
+      if (!account) return http.notFound(res, next)
 
       const output: ResponseData = { account }
       res.send(output)
@@ -81,11 +80,11 @@ export function getAccount(): AuthRequestHandler {
   }
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     // Get account ID and assert access
     const id = req.params.id || req.account._id
-    if (!req.account._id.equals(id)) return sendForbidden(res, next)
+    if (!req.account._id.equals(id)) return http.forbidden(res, next)
 
     try {
       // Send output
@@ -126,11 +125,11 @@ export function loginAccount({ auth, model }: Context): RequestHandler {
 
       // Get account
       const account = await model.account.collection.findOne({ email: input.account.email })
-      if (!account) return sendNotFound(res, next)
+      if (!account) return http.notFound(res, next)
 
       // Validate password
       const password = model.account.hashPassword(input.account.password, account.passwordSalt)
-      if (password !== account.password) return sendBadRequest(res, next, { reason: 'invalid password' })
+      if (password !== account.password) return http.badRequest(res, next, { reason: 'invalid password' })
 
       // Create JWT
       const token = await auth.sign(account._id)
@@ -143,7 +142,7 @@ export function loginAccount({ auth, model }: Context): RequestHandler {
       const name = (err as Error).name
       if (name === 'ValidateError') {
         const ve = err as v.ValidateError
-        return sendBadRequest(res, next, { param: ve.param, reason: ve.message })
+        return http.badRequest(res, next, { param: ve.param, reason: ve.message })
       }
       return next(err)
     }
@@ -168,22 +167,22 @@ export function updateAccount({ model }: Context): AuthRequestHandler {
   })
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     // Get account ID and assert access
     const id = req.params.id || req.account._id
-    if (!req.account._id.equals(id)) return sendForbidden(res, next)
+    if (!req.account._id.equals(id)) return http.forbidden(res, next)
 
     try {
       // Read input
       const input = readRequestData(req.body)
       if (!input.account.email && !input.account.password) {
-        return sendBadRequest(res, next, { reason: 'no changes' })
+        return http.badRequest(res, next, { reason: 'no changes' })
       }
 
       // Update account
       const account = await model.account.update(id, input.account)
-      if (!account) return sendNotFound(res, next)
+      if (!account) return http.notFound(res, next)
 
       // Send output
       const output: ResponseData = { account }
@@ -193,7 +192,7 @@ export function updateAccount({ model }: Context): AuthRequestHandler {
       const name = (err as Error).name
       if (name === 'ValidateError') {
         const ve = err as v.ValidateError
-        return sendBadRequest(res, next, { param: ve.param, reason: ve.message })
+        return http.badRequest(res, next, { param: ve.param, reason: ve.message })
       }
       return next(err)
     }

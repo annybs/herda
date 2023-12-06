@@ -4,8 +4,7 @@ import { ObjectId } from 'mongodb'
 import type { SearchResult } from '../api'
 import type { WithId } from 'mongodb'
 import type { Herd, HerdCreate, HerdUpdate } from './types'
-import { query, validate as v } from '@edge/misc-utils'
-import { sendBadRequest, sendForbidden, sendNotFound, sendUnauthorized } from '../http'
+import { http, query, validate as v } from '@edge/misc-utils'
 
 /** Create a herd. */
 export function createHerd({ model }: Context): AuthRequestHandler {
@@ -25,18 +24,18 @@ export function createHerd({ model }: Context): AuthRequestHandler {
   })
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     try {
       // Read input
       const input = readRequestData(req.body)
 
       // Assert ability to assign herd
-      if (!req.account._id.equals(input.herd._account)) return sendForbidden(res, next)
+      if (!req.account._id.equals(input.herd._account)) return http.forbidden(res, next)
 
       // Create herd
       const herd = await model.herd.create({ ...input.herd, _account: req.account._id })
-      if (!herd) return sendNotFound(res, next, { reason: 'unexpectedly failed to get new herd' })
+      if (!herd) return http.notFound(res, next, { reason: 'unexpectedly failed to get new herd' })
 
       // Send output
       const output: ResponseData = { herd }
@@ -46,7 +45,7 @@ export function createHerd({ model }: Context): AuthRequestHandler {
       const name = (err as Error).name
       if (name === 'ValidateError') {
         const ve = err as v.ValidateError
-        return sendBadRequest(res, next, { param: ve.param, reason: ve.message })
+        return http.badRequest(res, next, { param: ve.param, reason: ve.message })
       }
       return next(err)
     }
@@ -64,13 +63,13 @@ export function deleteHerd({ model }: Context): AuthRequestHandler {
   }
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     try {
       // Assert access to herd
       const herd = await model.herd.collection.findOne({ _id: new ObjectId(req.params.id) })
-      if (!herd) return sendNotFound(res, next)
-      if (!req.account._id.equals(herd._account)) return sendForbidden(res, next)
+      if (!herd) return http.notFound(res, next)
+      if (!req.account._id.equals(herd._account)) return http.forbidden(res, next)
 
       // Delete herd
       const result = await model.herd.delete(herd._id)
@@ -97,13 +96,13 @@ export function getHerd({ model }: Context): AuthRequestHandler {
   }
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     try {
       // Assert access to herd
       const herd = await model.herd.collection.findOne({ _id: new ObjectId(req.params.id) })
-      if (!herd) return sendNotFound(res, next)
-      if (!req.account._id.equals(herd._account)) return sendForbidden(res, next)
+      if (!herd) return http.notFound(res, next)
+      if (!req.account._id.equals(herd._account)) return http.forbidden(res, next)
 
       // Send output
       const output: ResponseData = { herd }
@@ -122,7 +121,7 @@ export function searchHerds({ model }: Context): AuthRequestHandler {
   }>
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     // Read parameters
     const limit = query.integer(req.query.limit, 1, 100) || 10
@@ -180,23 +179,23 @@ export function updateHerd({ model }: Context): AuthRequestHandler {
   })
 
   return async function (req, res, next) {
-    if (!req.account) return sendUnauthorized(res, next)
+    if (!req.account) return http.unauthorized(res, next)
 
     try {
       // Assert access to herd
       let herd = await model.herd.collection.findOne({ _id: new ObjectId(req.params.id) })
-      if (!herd) return sendNotFound(res, next)
-      if (!req.account._id.equals(herd._account)) return sendForbidden(res, next)
+      if (!herd) return http.notFound(res, next)
+      if (!req.account._id.equals(herd._account)) return http.forbidden(res, next)
 
       // Read input
       const input = readRequestData(req.body)
       if (!input.herd._account && !input.herd.name) {
-        return sendBadRequest(res, next, { reason: 'no changes' })
+        return http.badRequest(res, next, { reason: 'no changes' })
       }
 
       // Assert ability to assign herd, if specified in update
       if (input.herd._account) {
-        if (!req.account._id.equals(input.herd._account)) return sendForbidden(res, next)
+        if (!req.account._id.equals(input.herd._account)) return http.forbidden(res, next)
       }
 
       // Update herd
@@ -204,7 +203,7 @@ export function updateHerd({ model }: Context): AuthRequestHandler {
         ...input.herd,
         _account: input.herd._account && new ObjectId(input.herd._account) || undefined,
       })
-      if (!herd) return sendNotFound(res, next)
+      if (!herd) return http.notFound(res, next)
 
       // Send output
       const output: ResponseData = { herd }
@@ -214,7 +213,7 @@ export function updateHerd({ model }: Context): AuthRequestHandler {
       const name = (err as Error).name
       if (name === 'ValidateError') {
         const ve = err as v.ValidateError
-        return sendBadRequest(res, next, { param: ve.param, reason: ve.message })
+        return http.badRequest(res, next, { param: ve.param, reason: ve.message })
       }
       return next(err)
     }
