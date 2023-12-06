@@ -39,6 +39,13 @@ export interface Config {
      * @see https://www.mongodb.com/docs/drivers/node/current/quick-start/create-a-connection-string/
      */
     uri: string
+    /**
+     * Whether to use transactions to encapsulate multiple document writes in MongoDB clusters or replica sets
+     * (default: false)
+     *
+     * @see https://www.mongodb.com/docs/v7.0/core/transactions/#feature-compatibility-version--fcv-
+     */
+    useTransactions: boolean
   }
   /**
    * If the application cannot shut down because a process has stalled, it will force shutdown with `process.exit(1)`

@@ -1,5 +1,7 @@
+import type { Account } from './account/types'
 import type { Context } from './types'
 import { ObjectId } from 'mongodb'
+import type { WithId } from 'mongodb'
 import jwt from 'jsonwebtoken'
 import type { NextFunction, Request, Response } from 'express'
 
@@ -13,14 +15,13 @@ export type Auth = ReturnType<typeof createAuth>
 
 /** AuthRequest is an Express Request with some additional properties. */
 export type AuthRequest = Request & {
-  /** Account ID decoded from JWT. */
-  accountId?: ObjectId
   /**
-   * Indicates whether the request is verified with a JWT.
-   * This does not necessarily mean the corresponding accountId is internally valid or applicable to the contents of
-   * the request; only that the JWT was in itself valid.
+   * Account document set by authentication middleware.
+   * If this value exists, then the the request is authenticated with this account.
+   *
+   * @see Auth.verifyRequestMiddleware
    */
-  verified?: boolean
+  account?: WithId<Account>
 }
 
 /**
@@ -67,24 +68,38 @@ function createAuth(ctx: Context) {
   }
 
   /**
-   * Verify and decode a JWT provided in an HTTP request's authorization header.
+   * Express middleware to verify and decode a JWT provided in an HTTP request's authorization header.
    *
-   * If the JWT is verified, some additional properties are set on the request object as a side effect.
-   * These properties are then available to other, subsequent request handlers that use the `AuthRequestHandler` type.
-   * This function is thus suitable for use in Express middleware.
+   * If an account ID is successfully decoded from the JWT, this will attempt to load the account automatically before
+   * further request processing.
+   * The account is attached to the request and tacitly available to subsequent request handlers that implement the
+   * AuthRequestHandler type.
+   *
+   * If an invalid token is provided or the account does not exist, an error will be passed along, blocking request
+   * handling.
    */
-  async function verifyRequest(req: Request): Promise<ObjectId | undefined> {
+  const verifyRequestMiddleware: AuthRequestHandler = async (req, res, next) => {
+    // Read header and skip processing if bearer token missing or malformed
     const header = req.header('authorization')
-    if (!header) return
-    if (!/^[Bb]earer /.test(header)) return
-    const token = header.substring(7)
-    const accountId = await verify(token);
-    (req as AuthRequest).accountId = accountId;
-    (req as AuthRequest).verified = true
-    return accountId
+    if (!header) return next()
+    if (!/^[Bb]earer /.test(header)) return next()
+
+    try {
+      // Read and verify token
+      const token = header.substring(7)
+      const _id = await verify(token)
+
+      // Load account
+      const account = await ctx.model.account.collection.findOne({ _id })
+      if (!account) throw new Error(`account ${_id.toString()} not found`)
+      req.account = account
+      next()
+    } catch (err) {
+      return next(err)
+    }
   }
 
-  return { sign, verify, verifyRequest }
+  return { sign, verify, verifyRequestMiddleware }
 }
 
 export default createAuth
