@@ -10,6 +10,7 @@ import type { Config, Context } from './types'
 async function main(config: Config): Promise<void> {
   // Create context
   const ctx = <Context>{ config }
+  ctx.ctx = () => ctx
 
   // Initialize logger
   const log = createLogger(ctx)

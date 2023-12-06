@@ -1,3 +1,4 @@
+import type { ClientSession } from 'mongodb'
 import type { Context } from '../types'
 import { ObjectId } from 'mongodb'
 import crypto from 'crypto'
@@ -25,6 +26,27 @@ async function createAccountModel(ctx: Context) {
     })
 
     return await collection.findOne({ _id: result.insertedId })
+  }
+
+  /**
+   * Delete an account.
+   * This function also deletes any related data, including herds and tasks.
+   */
+  async function _delete(id: ObjectId | string, session?: ClientSession) {
+    let deletedHerds = 0
+    let deletedTasks = 0
+
+    // Delete herds
+    const herds = ctx.ctx().model.herd.collection.find({ _account: new ObjectId(id) }, { projection: { _id: 1 }, session })
+    for await (const herd of herds) {
+      const result = await ctx.ctx().model.herd.delete(herd._id)
+      deletedHerds++
+      deletedTasks += result.deletedCount
+    }
+
+    const account = await collection.findOneAndDelete({ _id: new ObjectId(id) }, { session })
+
+    return { account, deletedHerds, deletedTasks }
   }
 
   /** Generate a salt for use in password hashing. */
@@ -72,6 +94,7 @@ async function createAccountModel(ctx: Context) {
   return {
     collection,
     create,
+    delete: _delete,
     generateSalt,
     hashPassword,
     init,

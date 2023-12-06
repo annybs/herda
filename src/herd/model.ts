@@ -1,6 +1,6 @@
+import type { ClientSession } from 'mongodb'
 import type { Context } from '../types'
 import { ObjectId } from 'mongodb'
-import type { Task } from '../task/types'
 import type { Herd, HerdCreate, HerdUpdate } from './types'
 
 /** Model for accessing and managing herds. */
@@ -9,7 +9,6 @@ export type HerdModel = Awaited<ReturnType<typeof createHerdModel>>
 /** Create a herd model. */
 async function createHerdModel(ctx: Context) {
   const collection = ctx.db.collection<Herd>('herd')
-  const taskCollection = ctx.db.collection<Task>('task')
 
   /** Create a herd. */
   async function create(input: HerdCreate) {
@@ -40,39 +39,14 @@ async function createHerdModel(ctx: Context) {
    * Delete a herd.
    * This function removes all tasks associated with the herd and returns the number of tasks deleted.
    */
-  async function _delete(id: ObjectId) {
-    if (ctx.config.mongo.useTransactions) return _deleteTx(id)
-
+  async function _delete(id: ObjectId, session?: ClientSession) {
     // Delete tasks
-    const { deletedCount } = await taskCollection.deleteMany({ _herd: id })
+    const { deletedCount } = await ctx.ctx().model.task.collection.deleteMany({ _herd: id }, { session })
 
     // Delete herd
-    const herd = await collection.findOneAndDelete({ _id: id })
+    const herd = await collection.findOneAndDelete({ _id: id }, { session })
 
     return { herd, deletedCount }
-  }
-
-  /** Delete a herd using a transaction. */
-  async function _deleteTx(id: ObjectId) {
-    const session = ctx.mongo.startSession()
-    try {
-      session.startTransaction()
-
-      // Delete tasks
-      const { deletedCount } = await taskCollection.deleteMany({ _herd: id }, { session })
-
-      // Delete herd
-      const herd = await collection.findOneAndDelete({ _id: id })
-
-      // Commit and return
-      await session.commitTransaction()
-      return { herd, deletedCount }
-    } catch (err) {
-      await session.abortTransaction()
-      throw err
-    } finally {
-      await session.endSession()
-    }
   }
 
   /**

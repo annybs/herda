@@ -1,3 +1,4 @@
+import type { ClientSession } from 'mongodb'
 import type { Context } from '../types'
 import { ObjectId } from 'mongodb'
 import type { Task, TaskCreate, TaskUpdate } from './types'
@@ -44,14 +45,12 @@ async function createTaskModel(ctx: Context) {
    * Move a task.
    * This function updates the position of all subsequent tasks and returns the total number of tasks affected.
    */
-  async function move(id: ObjectId | string, position: number) {
-    if (ctx.config.mongo.useTransactions) return moveTx(id, position)
-
+  async function move(id: ObjectId | string, position: number, session?: ClientSession) {
     // Update specified task
     const task = await collection.findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: { position } },
-      { returnDocument: 'after' },
+      { returnDocument: 'after', session },
     )
     // Not expected to happen, but type-safe
     if (!task) throw new Error('failed to get updated task')
@@ -61,8 +60,7 @@ async function createTaskModel(ctx: Context) {
       _herd: task._herd,
       _id: { $ne: new ObjectId(id) },
       position: { $gte: position },
-
-    }).sort('position', 1)
+    }, { session }).sort('position', 1)
 
     // Update subsequent tasks
     let affectedCount = 1
@@ -70,55 +68,12 @@ async function createTaskModel(ctx: Context) {
       await collection.updateOne(
         { _id: task._id },
         { $set: { position: position + affectedCount } },
+        { session },
       )
       affectedCount++
     }
 
     return { task, affectedCount }
-  }
-
-  /** Move a task using a transaction. */
-  async function moveTx(id: ObjectId | string, position: number) {
-    const session = ctx.mongo.startSession()
-    try {
-      session.startTransaction()
-
-      // Update specified task
-      const task = await collection.findOneAndUpdate(
-        { _id: new ObjectId(id) },
-        { $set: { position } },
-        { returnDocument: 'after', session },
-      )
-      // Not expected to happen, but type-safe
-      if (!task) throw new Error('failed to get updated task')
-
-      // Get subsequent tasks
-      const nextTasks = collection.find({
-        _herd: task._herd,
-        _id: { $ne: new ObjectId(id) },
-        position: { $gte: position },
-      }, { session }).sort('position', 1)
-
-      // Update subsequent tasks
-      let affectedCount = 1
-      for await (const task of nextTasks) {
-        await collection.updateOne(
-          { _id: task._id },
-          { $set: { position: position + affectedCount } },
-          { session },
-        )
-        affectedCount++
-      }
-
-      // Commit and return
-      await session.commitTransaction()
-      return { task, affectedCount }
-    } catch (err) {
-      await session.abortTransaction()
-      throw err
-    } finally {
-      await session.endSession()
-    }
   }
 
   /**

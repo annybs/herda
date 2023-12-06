@@ -1,6 +1,5 @@
 import type { AuthRequestHandler } from '../auth'
 import type { Context } from '../types'
-import { ObjectId } from 'mongodb'
 import type { RequestHandler } from 'express'
 import type { WithId } from 'mongodb'
 import type { Account, AccountCreate, AccountUpdate } from './types'
@@ -48,6 +47,12 @@ export function createAccount({ model }: Context): RequestHandler {
 export function deleteAccount({ model }: Context): AuthRequestHandler {
   interface ResponseData {
     account: WithId<Account>
+    herds: {
+      deletedCount: number
+    }
+    tasks: {
+      deletedCount: number
+    }
   }
 
   return async function (req, res, next) {
@@ -60,11 +65,19 @@ export function deleteAccount({ model }: Context): AuthRequestHandler {
 
     try {
       // Delete account
-      /** @todo delete related data */
-      const account = await model.account.collection.findOneAndDelete({ _id: new ObjectId(id) })
+      const { account, deletedHerds, deletedTasks } = await model.account.delete(id)
       if (!account) return http.notFound(res, next)
 
-      const output: ResponseData = { account }
+      // Send output
+      const output: ResponseData = {
+        account,
+        herds: {
+          deletedCount: deletedHerds,
+        },
+        tasks: {
+          deletedCount: deletedTasks,
+        },
+      }
       res.send(output)
       next()
     } catch (err) {

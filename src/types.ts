@@ -61,6 +61,12 @@ export interface Config {
 export interface Context {
   auth: Auth
   config: Config
+  /**
+   * Get the reference to the application context.
+   * This can be useful in cases where the context object passed through scope is not the same as the application
+   * context, such as inside of models.
+   */
+  ctx(): Context
   db: Db
   log: Logger
   model: Models
