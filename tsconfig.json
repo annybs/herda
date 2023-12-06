@@ -8,6 +8,7 @@
     "skipLibCheck": true,
     "declaration": false,
     "removeComments": false,
+    "resolveJsonModule": true,
 
     "noUnusedLocals": true,
     "noUnusedParameters": false,
@@ -15,5 +16,5 @@
 
     "outDir": "out"
   },
-  "include": ["src"]
+  "include": ["src", "package.json"]
 }

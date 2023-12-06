@@ -2,10 +2,11 @@ import * as account from './account/api'
 import * as herd from './herd/api'
 import * as task from './task/api'
 import type { Context } from './types'
-import type { ErrorRequestHandler } from 'express'
 import cors from 'cors'
 import express from 'express'
 import { http } from '@edge/misc-utils'
+import { version } from '../package.json'
+import type { ErrorRequestHandler, RequestHandler } from 'express'
 
 /** Create an Express application. */
 function createExpress(ctx: Context) {
@@ -16,6 +17,9 @@ function createExpress(ctx: Context) {
   app.use(ctx.auth.verifyRequestMiddleware)
 
   const prefix = ctx.config.api.prefix
+
+  // Misc APIs
+  app.get(prefix, index)
 
   // Account APIs
   app.post(`${prefix}/account`, account.createAccount(ctx))
@@ -61,6 +65,14 @@ function createExpress(ctx: Context) {
   })
 
   return app
+}
+
+const index: RequestHandler = (req, res, next) => {
+  res.send({
+    product: 'Herda Server',
+    version,
+  })
+  next()
 }
 
 export default createExpress
