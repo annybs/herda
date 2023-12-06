@@ -28,6 +28,8 @@ export function createExpress(ctx: Context) {
   app.delete(`${prefix}/herd/:id`, herd.deleteHerd(ctx))
 
   // Task APIs
+  app.get(`${prefix}/tasks`, task.searchTasks(ctx))
+  app.get(`${prefix}/herd/:herd/tasks`, task.searchTasks(ctx))
   app.post(`${prefix}/task`, task.createTask(ctx))
   app.get(`${prefix}/task/:id`, task.getTask(ctx))
   app.put(`${prefix}/task/:id`, task.updateTask(ctx))
