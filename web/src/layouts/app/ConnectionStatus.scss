@@ -2,8 +2,8 @@
 
 .connection-status {
   svg {
+    @include icon-s;
     align-self: center;
-    width: 20px;
   }
 
   span {

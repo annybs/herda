@@ -68,3 +68,11 @@ $space-xl: 2rem;
     var(--color-bg) $size
   );
 }
+
+@mixin icon-s {
+  width: 20px;
+}
+
+@mixin icon-m {
+  width: 40px;
+}

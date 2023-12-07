@@ -4,6 +4,7 @@ import Button from '@/components/button/Button'
 import ButtonSet from '@/components/ButtonSet'
 import Chip from '@/components/Chip'
 import CreateButton from '@/components/button/CreateButton'
+import DeleteButton from '@/components/button/DeleteButton'
 import { DndContext } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import FormGroup from '@/components/form/FormGroup'
@@ -12,6 +13,7 @@ import LoadingIndicator from '@/components/LoadingIndicator'
 import Main from '@/components/Main'
 import Notice from '@/components/Notice'
 import Pagination from '@/components/Pagination'
+import Placeholder from '@/components/Placeholder'
 import ResetButton from '@/components/button/ResetButton'
 import Row from '@/components/Row'
 import SaveButton from '@/components/button/SaveButton'
@@ -19,12 +21,11 @@ import SearchForm from '@/components/SearchForm'
 import SortableRow from '@/components/SortableRow'
 import api from '@/api'
 import { useForm } from 'react-hook-form'
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
+import { CheckCircleIcon, CloudIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useCallback, useEffect, useState } from 'react'
 import { useConnection, useRouteSearch, useSession } from '@/hooks'
 import { useNavigate, useParams } from 'react-router-dom'
-import DeleteButton from '@/components/button/DeleteButton'
 
 interface HerdUpdateFormData extends Pick<api.Herd, 'name'> {}
 
@@ -101,6 +102,21 @@ export default function HerdView() {
     }
   }
 
+  async function deleteHerd() {
+    if (busy || !data) return
+
+    try {
+      setBusy(true)
+      setError(undefined)
+      await api.deleteHerd(options, data.herd._id)
+      navigate('/')
+    } catch (err) {
+      setError(err as Error)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function deleteTask(task: api.WithId<api.Task>) {
     if (busy) return
 
@@ -111,7 +127,7 @@ export default function HerdView() {
       // Reload current page
       const taskRes = await api.searchTasks(options, id, searchParams)
       setTaskData(taskRes)
-    } catch(err) {
+    } catch (err) {
       setError(err as Error)
     } finally {
       setBusy(false)
@@ -235,6 +251,7 @@ export default function HerdView() {
 
         <ButtonSet>
           <BackButton onClick={() => navigate('/')} />
+          <DeleteButton onClick={deleteHerd} />
         </ButtonSet>
       </header>
 
@@ -244,33 +261,40 @@ export default function HerdView() {
 
       {taskData && (
         <>
-          <DndContext onDragEnd={moveTask}>
-            <SortableContext
-              items={taskData.results.map(({ task }) => task._id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {taskData.results.map(({ task }, i) => (
-                <SortableRow key={task._id} id={task._id} className={`task ${task.done ? 'done' : 'not-done'}`} disabled={disableSorting}>
-                  <div className="position">{i + 1 + ((page - 1) * limit)}</div>
-                  <div className="description">{task.description}</div>
-                  <ButtonSet>
-                    {task.done ? (
-                      <Button className="positive mini fill" onClick={() => toggleTaskDone(task)}>
-                        <CheckCircleIcon />
-                        <span>Done</span>
-                      </Button>
-                    ) : (
-                      <Button className="negative mini" onClick={() => toggleTaskDone(task)}>
-                        <XCircleIcon />
-                        <span>Not done</span>
-                      </Button>
-                    )}
-                    <DeleteButton className="mini" onClick={() => deleteTask(task)} />
-                  </ButtonSet>
-                </SortableRow>
-              ))}
-            </SortableContext>
-          </DndContext>
+          {taskData.metadata.totalCount > 0 ? (
+            <DndContext onDragEnd={moveTask}>
+              <SortableContext
+                items={taskData.results.map(({ task }) => task._id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {taskData.results.map(({ task }, i) => (
+                  <SortableRow key={task._id} id={task._id} className={`task ${task.done ? 'done' : 'not-done'}`} disabled={disableSorting}>
+                    <div className="position">{i + 1 + ((page - 1) * limit)}</div>
+                    <div className="description">{task.description}</div>
+                    <ButtonSet>
+                      {task.done ? (
+                        <Button className="positive mini fill" onClick={() => toggleTaskDone(task)}>
+                          <CheckCircleIcon />
+                          <span>Done</span>
+                        </Button>
+                      ) : (
+                        <Button className="negative mini" onClick={() => toggleTaskDone(task)}>
+                          <XCircleIcon />
+                          <span>Not done</span>
+                        </Button>
+                      )}
+                      <DeleteButton className="mini" onClick={() => deleteTask(task)} />
+                    </ButtonSet>
+                  </SortableRow>
+                ))}
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <Placeholder>
+              <CloudIcon />
+              <span>No tasks!</span>
+            </Placeholder>
+          )}
 
           <form onSubmit={createTaskForm.handleSubmit(createTask)}>
             <FormGroup name="Add a task">

@@ -1,0 +1,13 @@
+@import '@/vars.scss';
+
+.placeholder {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  padding: $space-l;
+  vertical-align: center;
+
+  svg {
+    @include icon-m;
+  }
+}

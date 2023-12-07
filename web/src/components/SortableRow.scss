@@ -7,8 +7,8 @@
     margin-right: $space-s;
 
     svg {
+      @include icon-s;
       vertical-align: text-top;
-      width: 20px;
     }
   }
 

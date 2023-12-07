@@ -13,7 +13,7 @@ export interface PaginationProps {
 export default function Pagination({ totalCount }: PropsWithChildren<PaginationProps>) {
   const { limit, page, ...routeSearch } = useRouteSearch()
 
-  const maxPage = Math.ceil(totalCount / limit)
+  const maxPage = Math.max(Math.ceil(totalCount / limit), 1)
 
   const can = {
     first: page > 1,
