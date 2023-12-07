@@ -24,6 +24,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useCallback, useEffect, useState } from 'react'
 import { useConnection, useRouteSearch, useSession } from '@/hooks'
 import { useNavigate, useParams } from 'react-router-dom'
+import DeleteButton from '@/components/button/DeleteButton'
 
 interface HerdUpdateFormData extends Pick<api.Herd, 'name'> {}
 
@@ -94,6 +95,23 @@ export default function HerdView() {
         setTaskData(taskRes)
       }
     } catch (err) {
+      setError(err as Error)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function deleteTask(task: api.WithId<api.Task>) {
+    if (busy) return
+
+    try {
+      setBusy(true)
+      setError(undefined)
+      await api.deleteTask(options, task._id)
+      // Reload current page
+      const taskRes = await api.searchTasks(options, id, searchParams)
+      setTaskData(taskRes)
+    } catch(err) {
       setError(err as Error)
     } finally {
       setBusy(false)
@@ -247,6 +265,7 @@ export default function HerdView() {
                         <span>Not done</span>
                       </Button>
                     )}
+                    <DeleteButton className="mini" onClick={() => deleteTask(task)} />
                   </ButtonSet>
                 </SortableRow>
               ))}
