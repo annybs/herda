@@ -5,7 +5,7 @@
   border-width: 0;
   border-radius: $radius-s;
   margin: $space-s 0;
-  padding: $space-s $space-m;
+  padding: $space-s $space-m $space-s $space-sm;
 
   .position {
     background: var(--color-bg);
@@ -17,5 +17,11 @@
 
   .description {
     flex-grow: 1;
+  }
+
+  &.done {
+    .description {
+      color: var(--color-inactive-fg);
+    }
   }
 }

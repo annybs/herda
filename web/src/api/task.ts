@@ -35,6 +35,19 @@ export interface GetTaskResponse {
   task: WithId<Task>
 }
 
+/** Move task response data. */
+export interface MoveTaskResponse {
+  task: WithId<Task>
+  tasks: {
+    affectedCount: number
+  }
+}
+
+/** Toggle task done response data. */
+export interface ToggleTaskDoneResponse {
+  task: WithId<Task>
+}
+
 /** Update task request data. */
 export interface UpdateTaskRequest {
   task: Partial<Task>
@@ -60,9 +73,19 @@ export async function getTask(opt: Options, id: string): Promise<GetTaskResponse
   return request(opt, 'GET', `/task/${id}`)
 }
 
+/** Move a task. */
+export async function moveTask(opt: Options, id: string, position: number): Promise<MoveTaskResponse> {
+  return request(opt, 'PATCH', `/task/${id}/move/${position}`)
+}
+
 /** Search tasks. */
 export async function searchTasks(opt: Options, herd?: string, params?: SearchParams): Promise<SearchResponse<GetTaskResponse>> {
   return request(opt, 'GET', herd ? `/herd/${herd}/tasks` : '/tasks', params && writeSearchParams(params))
+}
+
+/** Toggle task done status. */
+export async function toggleTaskDone(opt: Options, id: string): Promise<ToggleTaskDoneResponse> {
+  return request(opt, 'PATCH', `/task/${id}/done`)
 }
 
 /** Update a task. */

@@ -2,7 +2,10 @@ import './HerdView.scss'
 import BackButton from '@/components/button/BackButton'
 import Button from '@/components/button/Button'
 import ButtonSet from '@/components/ButtonSet'
+import Chip from '@/components/Chip'
 import CreateButton from '@/components/button/CreateButton'
+import { DndContext } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
 import FormGroup from '@/components/form/FormGroup'
 import FormInput from '@/components/form/FormInput'
 import LoadingIndicator from '@/components/LoadingIndicator'
@@ -13,13 +16,14 @@ import ResetButton from '@/components/button/ResetButton'
 import Row from '@/components/Row'
 import SaveButton from '@/components/button/SaveButton'
 import SearchForm from '@/components/SearchForm'
+import SortableRow from '@/components/SortableRow'
 import api from '@/api'
+import { useForm } from 'react-hook-form'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useCallback, useEffect, useState } from 'react'
 import { useConnection, useRouteSearch, useSession } from '@/hooks'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import Chip from '@/components/Chip'
 
 interface HerdUpdateFormData extends Pick<api.Herd, 'name'> {}
 
@@ -58,11 +62,14 @@ export default function HerdView() {
   const { options } = useConnection()
   const { limit, page, searchParams, setPage } = useRouteSearch()
 
-  const [busy, setBusy] = useState(false)
   const [data, setData] = useState<api.GetHerdResponse>()
   const [taskData, setTaskData] = useState<api.SearchResponse<api.GetTaskResponse>>()
+
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState<Error>()
   const [loading, setLoading] = useState(false)
+
+  const disableSorting = Boolean(searchParams.search)
 
   async function createTask(data: TaskCreateFormData) {
     if (busy) return
@@ -86,6 +93,54 @@ export default function HerdView() {
         const taskRes = await api.searchTasks(options, id, searchParams)
         setTaskData(taskRes)
       }
+    } catch (err) {
+      setError(err as Error)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function moveTask({ active, over }: DragEndEvent) {
+    if (busy || !taskData || !over || active.id === over.id) return
+
+    const activeIdx = taskData.results.findIndex(({ task }) => task._id === active.id)
+    const overIdx = taskData.results.findIndex(({ task }) => task._id === over.id)
+    if (activeIdx < 0 || overIdx < 0) return
+    const target = taskData.results[overIdx]
+
+    try {
+      setBusy(true)
+      setError(undefined)
+      const update = await api.moveTask(options, active.id.toString(), target.task.position)
+      // Hot reorder tasks
+      const results = activeIdx < overIdx
+        // Task moved down
+        ? [
+          ...taskData.results.slice(0, overIdx + 1).filter(({ task }) => task._id !== update.task._id),
+          update,
+          ...taskData.results.slice(overIdx +1),
+        ]
+        // Task moved up
+        : [
+          ...taskData.results.slice(0, overIdx),
+          update,
+          ...taskData.results.slice(overIdx).filter(({ task }) => task._id !== update.task._id),
+        ]
+      setTaskData({ ...taskData, results })
+    } catch (err) {
+      setError(err as Error)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function toggleTaskDone(task: api.WithId<api.Task>) {
+    try {
+      setBusy(true)
+      setError(undefined)
+      const update = await api.toggleTaskDone(options, task._id)
+      const inPageTask = taskData?.results.find(({ task }) => task._id === update.task._id)
+      if (inPageTask) inPageTask.task.done = update.task.done
     } catch (err) {
       setError(err as Error)
     } finally {
@@ -171,25 +226,32 @@ export default function HerdView() {
 
       {taskData && (
         <>
-          {taskData.results.map(({ task }) => (
-            <Row key={task._id} className={`task ${task.done ? 'done' : 'not-done'}`}>
-              <div className="position">{task.position}</div>
-              <div className="description">{task.description}</div>
-              <ButtonSet>
-                {task.done ? (
-                  <Button className="positive mini fill">
-                    <CheckCircleIcon />
-                    <span>Done</span>
-                  </Button>
-                ) : (
-                  <Button className="negative mini">
-                    <XCircleIcon />
-                    <span>Not done</span>
-                  </Button>
-                )}
-              </ButtonSet>
-            </Row>
-          ))}
+          <DndContext onDragEnd={moveTask}>
+            <SortableContext
+              items={taskData.results.map(({ task }) => task._id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {taskData.results.map(({ task }, i) => (
+                <SortableRow key={task._id} id={task._id} className={`task ${task.done ? 'done' : 'not-done'}`} disabled={disableSorting}>
+                  <div className="position">{i + 1 + ((page - 1) * limit)}</div>
+                  <div className="description">{task.description}</div>
+                  <ButtonSet>
+                    {task.done ? (
+                      <Button className="positive mini fill" onClick={() => toggleTaskDone(task)}>
+                        <CheckCircleIcon />
+                        <span>Done</span>
+                      </Button>
+                    ) : (
+                      <Button className="negative mini" onClick={() => toggleTaskDone(task)}>
+                        <XCircleIcon />
+                        <span>Not done</span>
+                      </Button>
+                    )}
+                  </ButtonSet>
+                </SortableRow>
+              ))}
+            </SortableContext>
+          </DndContext>
 
           <form onSubmit={createTaskForm.handleSubmit(createTask)}>
             <FormGroup name="Add a task">
