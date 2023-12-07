@@ -48,7 +48,22 @@ $space-xl: 2rem;
   --color-warn: #f3af2f;
 
   @media (prefers-color-scheme: light) {
-    // light colours todo
+    --color-bg-alt: #d8d8d8;
+    --color-bg: #ececec;
+    --color-border: #b5b5b5;
+    --color-cta: #449055;
+    --color-focus: #222222;
+    --color-inactive: #494949;
+    --color-inactive-fg: #909090;
+    --color-negative-fg: #dddddd;
+    --color-negative: #d84c4c;
+    --color-fg-alt: #494949;
+    --color-fg: #343434;
+    --color-positive-fg: #dddddd;
+    --color-positive: #449055;
+    --color-shadow: #cccccc;
+    --color-warn-fg: #343434;
+    --color-warn: #f3af2f;
   }
 }
 
