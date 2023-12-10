@@ -41,22 +41,28 @@ export class RequestError extends Error {
   /**
    * Create a request API error by parsing a XMLHTTPRequest (which is presumed to have completed).
    *
-   * If the response is a standard REST error, its message and any additional data will be attached automatically to the RequestError.
+   * If the response is a standard REST error, the JSON message will be attached automatically to the RequestError.
+   * Any additional properties will be attached as data.
    * See `error` in <https://github.com/edge/misc-utils/blob/master/lib/http.ts> for more detail.
    *
    * If the response is not a standard REST error then YMMV.
    */
   static parse(xhr: XMLHttpRequest) {
     let message = xhr.status.toString()
-    let data = undefined
+    let data: Record<string, unknown> | undefined = undefined
 
-    if (xhr.getResponseHeader('Content-Type')?.startsWith('application/json')) {
+    if (xhr.getResponseHeader('content-type')?.includes('application/json')) {
       const res = JSON.parse(xhr.response)
       if (isObject(res)) {
         if (res.message && typeof res.message === 'string') message = res.message
-        if (isObject(res.data)) data = res.data
+        data = {}
+        for (const key in res) {
+          if (key === 'message') continue
+          data[key] = res[key]
+        }
       }
     }
+
 
     return new this(message, data, xhr)
   }
