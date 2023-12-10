@@ -5,14 +5,25 @@ import { useContext } from 'react'
 
 export { useRouteSearch } from './routeSearch'
 
+/**
+ * Get the connection to the Herda server.
+ * This provides access to request options such as base URL, authentication etc.
+ */
 export function useConnection() {
   return useContext(ConnectionContext)
 }
 
+/**
+ * Get functions to modify the document, including setting the page title.
+ */
 export function useDocument() {
   return useContext(DocumentContext)
 }
 
+/**
+ * Get the user session, using the connection authentication.
+ * This also provides functions to verify and manage the session.
+ */
 export function useSession() {
   return useContext(SessionContext)
 }

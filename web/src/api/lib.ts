@@ -62,6 +62,7 @@ export class RequestError extends Error {
   }
 }
 
+/** Search and pagination parameters. */
 export interface SearchParams {
   limit?: number
   page?: number
@@ -69,6 +70,7 @@ export interface SearchParams {
   sort?: string[]
 }
 
+/** Standard response structure for search APIs. */
 export interface SearchResponse<T> {
   results: T[]
   metadata: {
