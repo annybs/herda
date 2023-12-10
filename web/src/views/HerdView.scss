@@ -24,4 +24,17 @@
       color: var(--color-inactive-fg);
     }
   }
+
+  .edit-task {
+    margin-right: $space-m;
+
+    .input {
+      flex-grow: 1;
+      margin-right: $space-s;
+    }
+  }
+
+  button span {
+    display: none;
+  }
 }

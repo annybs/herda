@@ -19,9 +19,10 @@ import Row from '@/components/Row'
 import SaveButton from '@/components/button/SaveButton'
 import SearchForm from '@/components/SearchForm'
 import SortableRow from '@/components/SortableRow'
+import type { SubmitHandler } from 'react-hook-form'
 import api from '@/api'
 import { useForm } from 'react-hook-form'
-import { CheckCircleIcon, CloudIcon, XCircleIcon } from '@heroicons/react/20/solid'
+import { CheckCircleIcon, CloudIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useCallback, useEffect, useState } from 'react'
 import { useConnection, useRouteSearch, useSession } from '@/hooks'
@@ -30,6 +31,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 interface HerdUpdateFormData extends Pick<api.Herd, 'name'> {}
 
 interface TaskCreateFormData extends Pick<api.Task, 'description'> {}
+
+interface TaskUpdateFormData extends Pick<api.Task, 'description'> {}
 
 function useHerdUpdateForm() {
   const form = useForm<HerdUpdateFormData>({ mode: 'onBlur' })
@@ -55,19 +58,33 @@ function useTaskCreateForm() {
   return { ...form, inputs }
 }
 
+function useTaskUpdateForm() {
+  const form = useForm<TaskUpdateFormData>({ mode: 'onBlur' })
+
+  const inputs = {
+    description: form.register('description', { validate: value => {
+      if (value.length < 1) return 'Required'
+    }}),
+  }
+
+  return { ...form, inputs }
+}
+
 export default function HerdView() {
   const { account } = useSession()
-  const { id } = useParams()
   const createTaskForm = useTaskCreateForm()
-  const updateHerdForm = useHerdUpdateForm()
+  const { id } = useParams()
   const navigate = useNavigate()
   const { options } = useConnection()
+  const updateHerdForm = useHerdUpdateForm()
+  const updateTaskForm = useTaskUpdateForm()
   const { limit, page, searchParams, setPage } = useRouteSearch()
 
   const [data, setData] = useState<api.GetHerdResponse>()
   const [taskData, setTaskData] = useState<api.SearchResponse<api.GetTaskResponse>>()
 
   const [busy, setBusy] = useState(false)
+  const [editing, setEditing] = useState<string>()
   const [error, setError] = useState<Error>()
   const [loading, setLoading] = useState(false)
 
@@ -199,6 +216,15 @@ export default function HerdView() {
     }
   }, [id, options, searchParams])
 
+  function setTaskToEdit(task?: api.WithId<api.Task>) {
+    if (task) {
+      setEditing(task._id)
+      updateTaskForm.reset({ description: task.description })
+    } else {
+      setEditing(undefined)
+    }
+  }
+
   async function updateHerd(data: HerdUpdateFormData) {
     if (busy) return
 
@@ -213,6 +239,27 @@ export default function HerdView() {
       setError(err as Error)
     } finally {
       setBusy(false)
+    }
+  }
+
+  function updateTask(task: api.WithId<api.Task>): SubmitHandler<TaskUpdateFormData> {
+    return async function(data) {
+      if (busy) return
+
+      try {
+        setBusy(true)
+        setError(undefined)
+        const update = await api.updateTask(options, task._id, { task: data })
+        const inPageTask = taskData?.results.find(({ task }) => task._id === update.task._id)
+        if (inPageTask) {
+          inPageTask.task.description = update.task.description
+        }
+        setEditing(undefined)
+      } catch (err) {
+        setError(err as Error)
+      } finally {
+        setBusy(false)
+      }
     }
   }
 
@@ -270,7 +317,26 @@ export default function HerdView() {
                 {taskData.results.map(({ task }, i) => (
                   <SortableRow key={task._id} id={task._id} className={`task ${task.done ? 'done' : 'not-done'}`} disabled={disableSorting}>
                     <div className="position">{i + 1 + ((page - 1) * limit)}</div>
-                    <div className="description">{task.description}</div>
+                    <div className="description">
+                      {editing === task._id ? (
+                        <form onSubmit={updateTaskForm.handleSubmit(updateTask(task))}>
+                          <Row className="edit-task">
+                            <FormInput>
+                              <input type="text" autoFocus {...updateTaskForm.inputs.description} />
+                            </FormInput>
+                            <ButtonSet>
+                              <SaveButton type="submit" className="mini" />
+                              <Button onClick={() => setTaskToEdit(undefined)} className="mini">
+                                <XMarkIcon />
+                                <span>Cancel</span>
+                              </Button>
+                            </ButtonSet>
+                          </Row>
+                        </form>
+                      ) : (
+                        <span onClick={() => setTaskToEdit(task)}>{task.description}</span>
+                      )}
+                    </div>
                     <ButtonSet>
                       {task.done ? (
                         <Button className="positive mini fill" onClick={() => toggleTaskDone(task)}>
