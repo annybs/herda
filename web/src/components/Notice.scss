@@ -1,0 +1,27 @@
+@import '../vars.scss';
+
+.notice {
+  --bg: var(--color-bg-alt);
+  --fg: var(--color-fg-alt);
+
+  &.error, &.negative {
+    --bg: var(--color-negative);
+    --fg: var(--color-negative-fg);
+  }
+
+  &.positive {
+    --bg: var(--color-positive);
+    --fg: var(--color-positive-fg);
+  }
+
+  &.warn {
+    --bg: var(--color-warn);
+    --fg: var(--color-warn-fg);
+  }
+
+  background-color: var(--bg);
+  border-radius: $radius-s;
+  color: var(--fg);
+  margin: $space-s 0;
+  padding: $space-s;
+}

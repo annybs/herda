@@ -1,0 +1,29 @@
+@import '@/vars.scss';
+
+.fieldset {
+  background-color: var(--color-bg-alt);
+  border-width: 0;
+  border-radius: $radius-s;
+  margin: 2rem 0 $space-s;
+  padding: 0 $space-s $space-s;
+
+  > legend {
+    left: -$space-s;
+    font-weight: $font-weight-bold;
+    margin-bottom: -$space-sm;
+    position: relative;
+    top: -1.25rem;
+  }
+
+  > p {
+    margin: $space-s 0;
+  }
+
+  .input {
+    margin-top: $space-s;
+  }
+
+  .button-set {
+    margin-top: $space-m;
+  }
+}

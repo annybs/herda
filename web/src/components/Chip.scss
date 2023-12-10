@@ -1,0 +1,33 @@
+@import '../vars.scss';
+
+.chip {
+  --bg: var(--color-fg-alt);
+  --fg: var(--color-bg-alt);
+
+  &.negative {
+    --bg: var(--color-negative);
+    --fg: var(--color-negative-fg);
+  }
+
+  &.positive {
+    --bg: var(--color-positive);
+    --fg: var(--color-positive-fg);
+  }
+
+  &.warn {
+    --bg: var(--color-warn);
+    --fg: var(--color-warn-fg);
+  }
+
+  background-color: var(--bg);
+  color: var(--fg);
+
+  border-radius: $radius-s;
+  display: inline-block;
+  padding: 0 $space-s;
+  width: fit-content;
+
+  &.mini {
+    font-size: $font-size-s;
+  }
+}

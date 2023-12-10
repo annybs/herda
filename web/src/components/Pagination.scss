@@ -1,0 +1,11 @@
+@import '../vars.scss';
+
+.pagination {
+  .info {
+    @include filler;
+    flex-grow: 1;
+    margin-left: $space-s;
+    padding-top: $space-xs;
+    text-align: center;
+  }
+}

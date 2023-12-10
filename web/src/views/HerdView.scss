@@ -1,0 +1,40 @@
+@import '@/vars.scss';
+
+.row.task {
+  background-color: var(--color-bg-alt);
+  border-width: 0;
+  border-radius: $radius-s;
+  margin: $space-s 0;
+  padding: $space-s $space-m $space-s $space-sm;
+
+  .position {
+    background: var(--color-bg);
+    border-radius: $radius-l;
+    margin-right: $space-s;
+    padding: 0 $space-s;
+    text-align: center;
+  }
+
+  .description {
+    flex-grow: 1;
+  }
+
+  &.done {
+    .description {
+      color: var(--color-inactive-fg);
+    }
+  }
+
+  .edit-task {
+    margin-right: $space-m;
+
+    .input {
+      flex-grow: 1;
+      margin-right: $space-s;
+    }
+  }
+
+  button span {
+    display: none;
+  }
+}

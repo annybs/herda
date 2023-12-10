@@ -1,0 +1,56 @@
+@import '@/vars.scss';
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.top {
+  color: var(--color-fg-alt);
+  display: flex;
+  flex-direction: row;
+  margin: $space-m;
+}
+
+.main {
+  flex-grow: 1;
+  margin: 0 $space-m;
+}
+
+.bottom {
+  display: flex;
+  flex-direction: row;
+  margin: $space-m;
+
+  > *:not(:first-child) {
+    margin-left: $space-s;
+    margin-right: 0;
+  }
+
+  .connection-status, .copyright {
+    background-color: var(--color-bg-alt);
+    border-radius: $radius-s;
+    color: var(--color-fg-alt);
+    padding: $space-xs $space-s;
+  }
+
+  .support {
+    .button-set, button {
+      height: 100%;
+    }
+
+    button span {
+      display: none;
+    }
+  }
+}
+
+.spacer {
+  @include filler;
+
+  background-color: var(--color-bg-alt);
+  border-radius: $radius-s;
+  flex-grow: 1;
+  margin: 0 $space-s;
+}

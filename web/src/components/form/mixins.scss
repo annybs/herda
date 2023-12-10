@@ -1,0 +1,20 @@
+@mixin input {
+  background-color: var(--color-bg);
+  border: $border-width-s solid var(--color-bg);
+  border-radius: $radius-s;
+  box-sizing: border-box;
+  color: var(--color-fg);
+  font: inherit;
+  line-height: normal;
+  padding: $space-xs $space-s;
+
+  &:disabled {
+    color: var(--color-inactive);
+    cursor: not-allowed;
+  }
+
+  &:focus {
+    border-color: var(--color-focus);
+    outline: none;
+  }
+}

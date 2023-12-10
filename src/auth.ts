@@ -2,6 +2,7 @@ import type { Account } from './account/types'
 import type { Context } from './types'
 import { ObjectId } from 'mongodb'
 import type { WithId } from 'mongodb'
+import { http } from '@edge/misc-utils'
 import jwt from 'jsonwebtoken'
 import type { NextFunction, Request, Response } from 'express'
 
@@ -91,7 +92,7 @@ function createAuth(ctx: Context) {
 
       // Load account
       const account = await ctx.model.account.collection.findOne({ _id })
-      if (!account) throw new Error(`account ${_id.toString()} not found`)
+      if (!account) return http.unauthorized(res, next)
       req.account = account
       next()
     } catch (err) {

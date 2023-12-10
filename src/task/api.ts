@@ -194,7 +194,7 @@ export function searchTasks({ model }: Context): AuthRequestHandler {
 
     try {
       // Get total documents count for filter
-      const totalCount = await model.herd.collection.countDocuments(filter)
+      const totalCount = await model.task.collection.countDocuments(filter)
 
       // Build cursor
       let cursor = model.task.collection.find(filter)

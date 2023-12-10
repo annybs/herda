@@ -1,0 +1,12 @@
+@import '@/vars.scss';
+
+.connection-status {
+  svg {
+    @include icon-s;
+    align-self: center;
+  }
+
+  span {
+    margin-left: $space-xs;
+  }
+}

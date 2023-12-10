@@ -1,0 +1,21 @@
+@import "@/vars.scss";
+
+.sortable-row {
+  .drag-handle {
+    cursor: move;
+    display: block;
+    margin-right: $space-s;
+
+    svg {
+      @include icon-s;
+      vertical-align: text-top;
+    }
+  }
+
+  &.disabled {
+    .drag-handle svg {
+      fill: var(--color-inactive-fg);
+      cursor: default;
+    }
+  }
+}

@@ -1,0 +1,40 @@
+@import '../vars.scss';
+
+.main {
+  &.center {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    // These direct-child styles make it a little simpler to implement an error page
+    > p,
+    > .button-set,
+    > .notice {
+      margin-bottom: $space-m;
+    }
+  }
+
+  > header,
+  > form > header {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    margin-bottom: $space-m;
+
+    &:not(:first-child) {
+      margin-top: $space-m;
+    }
+
+    h1, h2 {
+      flex-grow: 1;
+      font-weight: bold;
+    }
+
+    h1 { font-size: $font-size-l; }
+  }
+
+  > section {
+    margin-bottom: $space-m;
+  }
+}
