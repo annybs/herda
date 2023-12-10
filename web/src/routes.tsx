@@ -1,13 +1,14 @@
+import AccountSettingsView from './views/AccountSettingsView'
 import AppLayout from './layouts/AppLayout'
 import Authenticated from './components/Authenticated'
+import CreateAccountView from './views/CreateAccountView'
 import ErrorView from './views/ErrorView'
+import HerdEditView from './views/HerdEditView'
 import HerdListView from '@/views/HerdListView'
 import HerdView from './views/HerdView'
 import LoginView from './views/LoginView'
 import { Outlet } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
-import CreateAccountView from './views/CreateAccountView'
-import AccountSettingsView from './views/AccountSettingsView'
 
 const coreRoutes: RouteObject[] = [
   {
@@ -21,6 +22,10 @@ const coreRoutes: RouteObject[] = [
   {
     path: '/herd/:id',
     element: <HerdView />,
+  },
+  {
+    path: '/herd/:id/edit',
+    element: <HerdEditView />,
   },
 ]
 

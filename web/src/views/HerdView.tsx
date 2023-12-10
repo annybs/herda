@@ -4,9 +4,9 @@ import Button from '@/components/button/Button'
 import ButtonSet from '@/components/ButtonSet'
 import Chip from '@/components/Chip'
 import CreateButton from '@/components/button/CreateButton'
-import DeleteButton from '@/components/button/DeleteButton'
 import { DndContext } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
+import EditButton from '@/components/button/EditButton'
 import FormGroup from '@/components/form/FormGroup'
 import FormInput from '@/components/form/FormInput'
 import LoadingIndicator from '@/components/LoadingIndicator'
@@ -14,7 +14,6 @@ import Main from '@/components/Main'
 import Notice from '@/components/Notice'
 import Pagination from '@/components/Pagination'
 import Placeholder from '@/components/Placeholder'
-import ResetButton from '@/components/button/ResetButton'
 import Row from '@/components/Row'
 import SaveButton from '@/components/button/SaveButton'
 import SearchForm from '@/components/SearchForm'
@@ -22,32 +21,18 @@ import SortableRow from '@/components/SortableRow'
 import type { SubmitHandler } from 'react-hook-form'
 import api from '@/api'
 import { useForm } from 'react-hook-form'
-import { CheckCircleIcon, CloudIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/20/solid'
+import { CheckCircleIcon, CloudIcon, TrashIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useCallback, useEffect, useState } from 'react'
 import { useConnection, useRouteSearch, useSession } from '@/hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 
-interface HerdUpdateFormData extends Pick<api.Herd, 'name'> {}
-
 interface TaskCreateFormData extends Pick<api.Task, 'description'> {}
 
 interface TaskUpdateFormData extends Pick<api.Task, 'description'> {}
 
-function useHerdUpdateForm() {
-  const form = useForm<HerdUpdateFormData>({ mode: 'onBlur' })
-
-  const inputs = {
-    name: form.register('name', { validate: value => {
-      if (value.length < 1) return 'Required'
-    }}),
-  }
-
-  return { ...form, inputs }
-}
-
 function useTaskCreateForm() {
-  const form = useForm<TaskCreateFormData>({ mode: 'onBlur' })
+  const form = useForm<TaskCreateFormData>({ mode: 'onSubmit' })
 
   const inputs = {
     description: form.register('description', { validate: value => {
@@ -72,12 +57,11 @@ function useTaskUpdateForm() {
 
 export default function HerdView() {
   const { account } = useSession()
-  const createTaskForm = useTaskCreateForm()
+  const createForm = useTaskCreateForm()
   const { id } = useParams()
   const navigate = useNavigate()
   const { options } = useConnection()
-  const updateHerdForm = useHerdUpdateForm()
-  const updateTaskForm = useTaskUpdateForm()
+  const updateForm = useTaskUpdateForm()
   const { limit, page, searchParams, setPage } = useRouteSearch()
 
   const [data, setData] = useState<api.GetHerdResponse>()
@@ -103,7 +87,7 @@ export default function HerdView() {
           description: data.description,
         },
       })
-      createTaskForm.reset({ description: '' })
+      createForm.reset({ description: '' })
       if (taskData && taskData.results.length >= limit) {
         // New task will be on a new page; change page to display it
         setPage(page + 1)
@@ -112,21 +96,6 @@ export default function HerdView() {
         const taskRes = await api.searchTasks(options, id, searchParams)
         setTaskData(taskRes)
       }
-    } catch (err) {
-      setError(err as Error)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function deleteHerd() {
-    if (busy || !data) return
-
-    try {
-      setBusy(true)
-      setError(undefined)
-      await api.deleteHerd(options, data.herd._id)
-      navigate('/')
     } catch (err) {
       setError(err as Error)
     } finally {
@@ -219,26 +188,9 @@ export default function HerdView() {
   function setTaskToEdit(task?: api.WithId<api.Task>) {
     if (task) {
       setEditing(task._id)
-      updateTaskForm.reset({ description: task.description })
+      updateForm.reset({ description: task.description })
     } else {
       setEditing(undefined)
-    }
-  }
-
-  async function updateHerd(data: HerdUpdateFormData) {
-    if (busy) return
-
-    try {
-      setBusy(true)
-      setError(undefined)
-      const res = await api.updateHerd(options, id as string, {
-        herd: data,
-      })
-      setData(res)
-    } catch (err) {
-      setError(err as Error)
-    } finally {
-      setBusy(false)
     }
   }
 
@@ -267,38 +219,16 @@ export default function HerdView() {
     reload()
   }, [reload])
 
-  if (loading) return (
+  return (
     <Main>
       <header>
-        {id ? <h1>Loading Herd...</h1> : <h1>Create Herd</h1>}
-      </header>
-
-      <LoadingIndicator />
-    </Main>
-  )
-
-  if (error) return (
-    <Main>
-      <header>
-        {id ? <h1>Loading Herd...</h1> : <h1>Create Herd</h1>}
-
-        <ButtonSet>
-          <BackButton />
-        </ButtonSet>
-      </header>
-
-      <Notice error={error} />
-    </Main>
-  )
-
-  return data && (
-    <Main>
-      <header>
-        <h1>{data.herd.name}</h1>
+        <h1>{data?.herd.name || 'Loading herd...'}</h1>
 
         <ButtonSet>
           <BackButton onClick={() => navigate('/')} />
-          <DeleteButton onClick={deleteHerd} />
+          {data && (
+            <EditButton className="outline" onClick={() => navigate(`/herd/${data.herd._id}/edit`)} />
+          )}
         </ButtonSet>
       </header>
 
@@ -306,94 +236,82 @@ export default function HerdView() {
 
       <Notice error={error} />
 
-      {taskData && (
-        <>
-          {taskData.metadata.totalCount > 0 ? (
-            <DndContext onDragEnd={moveTask}>
-              <SortableContext
-                items={taskData.results.map(({ task }) => task._id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {taskData.results.map(({ task }, i) => (
-                  <SortableRow key={task._id} id={task._id} className={`task ${task.done ? 'done' : 'not-done'}`} disabled={disableSorting}>
-                    <div className="position">{i + 1 + ((page - 1) * limit)}</div>
-                    <div className="description">
-                      {editing === task._id ? (
-                        <form onSubmit={updateTaskForm.handleSubmit(updateTask(task))}>
-                          <Row className="edit-task">
-                            <FormInput>
-                              <input type="text" autoFocus {...updateTaskForm.inputs.description} />
-                            </FormInput>
-                            <ButtonSet>
-                              <SaveButton type="submit" className="mini" />
-                              <Button onClick={() => setTaskToEdit(undefined)} className="mini">
-                                <XMarkIcon />
-                                <span>Cancel</span>
-                              </Button>
-                            </ButtonSet>
-                          </Row>
-                        </form>
-                      ) : (
-                        <span onClick={() => setTaskToEdit(task)}>{task.description}</span>
-                      )}
-                    </div>
-                    <ButtonSet>
-                      {task.done ? (
-                        <Button className="positive mini fill" onClick={() => toggleTaskDone(task)}>
-                          <CheckCircleIcon />
-                          <span>Done</span>
-                        </Button>
-                      ) : (
-                        <Button className="negative mini" onClick={() => toggleTaskDone(task)}>
-                          <XCircleIcon />
-                          <span>Not done</span>
-                        </Button>
-                      )}
-                      <DeleteButton className="mini" onClick={() => deleteTask(task)} />
-                    </ButtonSet>
-                  </SortableRow>
-                ))}
-              </SortableContext>
-            </DndContext>
-          ) : (
-            <Placeholder>
-              <CloudIcon />
-              <span>No tasks!</span>
-            </Placeholder>
-          )}
-
-          <form onSubmit={createTaskForm.handleSubmit(createTask)}>
-            <FormGroup name="Add a task">
-              <FormInput>
-                <Row>
-                  <input id="description" type="text" {...createTaskForm.inputs.description} />
-                  <ButtonSet>
-                    <CreateButton type="submit" className="fill" />
-                  </ButtonSet>
-                </Row>
-                <Chip className="mini" error={createTaskForm.formState.errors.description} />
-              </FormInput>
-            </FormGroup>
-          </form>
-
-          <Pagination totalCount={taskData.metadata.totalCount} />
-
-          <form onSubmit={updateHerdForm.handleSubmit(updateHerd)}>
-            <FormGroup name="Edit herd">
-              <FormInput id="herd:name" label="Name">
-                <input id="herd:name" type="text" {...updateHerdForm.inputs.name} />
-                <Chip className="mini" error={updateHerdForm.formState.errors.name} />
-              </FormInput>
-
-              <ButtonSet>
-                <SaveButton type="submit" className="fill" />
-                <ResetButton type="reset" />
-              </ButtonSet>
-            </FormGroup>
-          </form>
-        </>
+      {loading ? (
+        <Placeholder>
+          <LoadingIndicator />
+        </Placeholder>
+      ) : (taskData && taskData.metadata.totalCount > 0) ? (
+        <DndContext onDragEnd={moveTask}>
+          <SortableContext
+            items={taskData.results.map(({ task }) => task._id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {taskData.results.map(({ task }, i) => (
+              <SortableRow key={task._id} id={task._id} className={`task ${task.done ? 'done' : 'not-done'}`} disabled={disableSorting}>
+                <div className="position">{i + 1 + ((page - 1) * limit)}</div>
+                <div className="description">
+                  {editing === task._id ? (
+                    <form onSubmit={updateForm.handleSubmit(updateTask(task))}>
+                      <Row className="edit-task">
+                        <FormInput>
+                          <input type="text" disabled={busy} autoFocus {...updateForm.inputs.description} />
+                        </FormInput>
+                        <ButtonSet>
+                          <SaveButton type="submit" disabled={busy} className="mini" />
+                          <Button disabled={busy} onClick={() => setTaskToEdit(undefined)} className="mini">
+                            <XMarkIcon />
+                            <span>Cancel</span>
+                          </Button>
+                        </ButtonSet>
+                      </Row>
+                    </form>
+                  ) : (
+                    <span onClick={() => setTaskToEdit(task)}>{task.description}</span>
+                  )}
+                </div>
+                <ButtonSet>
+                  {task.done ? (
+                    <Button disabled={busy} className="positive mini fill" onClick={() => toggleTaskDone(task)}>
+                      <CheckCircleIcon />
+                      <span>Done</span>
+                    </Button>
+                  ) : (
+                    <Button disabled={busy} className="negative mini" onClick={() => toggleTaskDone(task)}>
+                      <XCircleIcon />
+                      <span>Not done</span>
+                    </Button>
+                  )}
+                  <Button disabled={busy} className="negative mini" onClick={() => deleteTask(task)}>
+                    <TrashIcon />
+                    <span>Delete</span>
+                  </Button>
+                </ButtonSet>
+              </SortableRow>
+            ))}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <Placeholder>
+          <CloudIcon />
+          <span>No tasks!</span>
+        </Placeholder>
       )}
 
+      <form onSubmit={createForm.handleSubmit(createTask)}>
+        <FormGroup name="Add a task">
+          <FormInput>
+            <Row>
+              <input id="description" disabled={busy} type="text" {...createForm.inputs.description} />
+              <ButtonSet>
+                <CreateButton disabled={busy} type="submit" className="fill" />
+              </ButtonSet>
+            </Row>
+            <Chip className="mini" error={createForm.formState.errors.description} />
+          </FormInput>
+        </FormGroup>
+      </form>
+
+      <Pagination totalCount={taskData?.metadata.totalCount || 0} />
     </Main>
   )
 }

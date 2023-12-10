@@ -1,32 +1,25 @@
+import BackButton from '@/components/button/BackButton'
 import ButtonSet from '@/components/ButtonSet'
 import Chip from '@/components/Chip'
-import CreateButton from '@/components/button/CreateButton'
+import DeleteButton from '@/components/button/DeleteButton'
 import FormGroup from '@/components/form/FormGroup'
 import FormInput from '@/components/form/FormInput'
-import { Link } from 'react-router-dom'
-import LoadingIndicator from '@/components/LoadingIndicator'
+import HideShowButton from '@/components/button/HideShowButton'
 import Main from '@/components/Main'
 import Notice from '@/components/Notice'
-import Pagination from '@/components/Pagination'
 import ResetButton from '@/components/button/ResetButton'
 import Row from '@/components/Row'
 import SaveButton from '@/components/button/SaveButton'
-import SearchForm from '@/components/SearchForm'
+import { TrashIcon } from '@heroicons/react/20/solid'
 import api from '@/api'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
-import { useRouteSearch } from '@/hooks'
 import { useCallback, useEffect, useState } from 'react'
 import { useConnection, useSession } from '@/hooks'
-import Placeholder from '@/components/Placeholder'
-import { CloudIcon, InboxIcon, TrashIcon } from '@heroicons/react/20/solid'
-import HideShowButton from '@/components/button/HideShowButton'
-import Button from '@/components/button/Button'
-import DeleteButton from '@/components/button/DeleteButton'
 
 interface AccountUpdateFormData extends Pick<api.Account, 'email' | 'password'> {}
 
-function useHerdCreateForm() {
+function useAccountUpdateForm() {
   const form = useForm<AccountUpdateFormData>({ mode: 'onBlur' })
 
   const inputs = {
@@ -43,14 +36,15 @@ function useHerdCreateForm() {
 }
 
 export default function AccountSettingsView() {
-  const { account, ...session } = useSession()
-  const updateAccountForm = useHerdCreateForm()
+  const form = useAccountUpdateForm()
   const navigate = useNavigate()
   const { options } = useConnection()
+  const { account, ...session } = useSession()
 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<Error>()
   const [passwordVisible, setPasswordVisible] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   async function deleteAccount() {
     if (busy || !account) return
@@ -67,19 +61,20 @@ export default function AccountSettingsView() {
     }
   }
 
-  function resetAccountUpdate() {
+  const reset = useCallback(() => {
     if (!account) return
 
-    updateAccountForm.reset({
+    form.reset({
       email: account.email,
       password: '',
     })
-  }
+  }, [account, form])
 
   async function updateAccount(data: AccountUpdateFormData) {
     if (busy || !account) return
 
     try {
+      setSuccess(false)
       setBusy(true)
       setError(undefined)
       await api.updateAccount(options, account._id, {
@@ -89,7 +84,8 @@ export default function AccountSettingsView() {
         },
       })
       await session.heartbeat()
-      resetAccountUpdate()
+      reset()
+      setSuccess(true)
     } catch (err) {
       setError(err as Error)
     } finally {
@@ -98,73 +94,66 @@ export default function AccountSettingsView() {
   }
 
   useEffect(() => {
-    resetAccountUpdate()
+    reset()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return account && (
     <Main>
-      <header>
-        <h1>Your account</h1>
+      <form onSubmit={form.handleSubmit(updateAccount)}>
+        <header>
+          <h1>My account</h1>
 
-        <ButtonSet>
-          <Button className="fill" onClick={() => navigate('/')}>
-            <InboxIcon />
-            <span>Back to Herds</span>
-          </Button>
-        </ButtonSet>
-      </header>
+          <ButtonSet>
+            <BackButton onClick={() => navigate('/')} />
+            <ResetButton disabled={busy || !form.formState.isDirty} onClick={reset} className="outline" />
+            <SaveButton disabled={busy || !form.formState.isDirty} type="submit" className="fill" />
+          </ButtonSet>
+        </header>
 
-      <Notice error={error} />
+        {success && <Notice className="positive">Account updated.</Notice>}
 
-      <form onSubmit={updateAccountForm.handleSubmit(updateAccount)}>
+        <Notice error={error} />
+
         <FormGroup name="Settings">
-          <p>You can update your login details below.</p>
-
           <FormInput id="email" label="Email address">
-            <input id="email" type="text" {...updateAccountForm.inputs.email} />
-            <Chip className="mini" error={updateAccountForm.formState.errors.email} />
+            <input id="email" type="text" {...form.inputs.email} />
+            <Chip className="mini" error={form.formState.errors.email} />
           </FormInput>
 
           <FormInput id="password" label="Password">
             <Row className="hidden">
-              <input id="password" type={passwordVisible ? 'text' : 'password'} {...updateAccountForm.inputs.password} />
+              <input id="password" type={passwordVisible ? 'text' : 'password'} {...form.inputs.password} />
               <ButtonSet>
                 <HideShowButton visible={passwordVisible} onClick={() => setPasswordVisible(!passwordVisible)} />
               </ButtonSet>
             </Row>
-            {updateAccountForm.formState.errors.password && <Chip className="mini" error={updateAccountForm.formState.errors.password} />}
+            {form.formState.errors.password && <Chip className="mini" error={form.formState.errors.password} />}
           </FormInput>
-
-          <ButtonSet>
-            <SaveButton type="submit" className="fill" />
-            <ResetButton onClick={resetAccountUpdate} />
-          </ButtonSet>
         </FormGroup>
       </form>
 
-      <FormGroup name="Danger zone">
-        <p>
-          If you would like to stop using Herda, you can delete your account and all your data.
-        </p>
+      <h2>Delete account</h2>
 
-        <Notice className="warn">Account deletion is not reversible. Proceed with care.</Notice>
+      <p>
+        If you would like to stop using Herda, you can delete your account and all your data.
+        This is not reversible, so proceed with care.
+      </p>
 
-        <ButtonSet>
-          <DeleteButton
-            className="fill"
-            confirm={(
-              <>
-                <TrashIcon />
-                <span>Yes, really delete my account!</span>
-              </>
-            )}
-            onClick={deleteAccount}
-          >
-            <span>Delete my account</span>
-          </DeleteButton>
-        </ButtonSet>
-      </FormGroup>
+      <ButtonSet>
+        <DeleteButton
+          className="fill"
+          confirm={(
+            <>
+              <TrashIcon />
+              <span>Yes, really delete my account!</span>
+            </>
+          )}
+          onClick={deleteAccount}
+        >
+          <span>Delete my account</span>
+        </DeleteButton>
+      </ButtonSet>
     </Main>
   )
 }

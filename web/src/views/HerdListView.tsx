@@ -1,6 +1,7 @@
 import './HerdListView.scss'
 import ButtonSet from '@/components/ButtonSet'
 import Chip from '@/components/Chip'
+import { CloudIcon } from '@heroicons/react/20/solid'
 import CreateButton from '@/components/button/CreateButton'
 import FormGroup from '@/components/form/FormGroup'
 import FormInput from '@/components/form/FormInput'
@@ -9,9 +10,8 @@ import LoadingIndicator from '@/components/LoadingIndicator'
 import Main from '@/components/Main'
 import Notice from '@/components/Notice'
 import Pagination from '@/components/Pagination'
-import ResetButton from '@/components/button/ResetButton'
+import Placeholder from '@/components/Placeholder'
 import Row from '@/components/Row'
-import SaveButton from '@/components/button/SaveButton'
 import SearchForm from '@/components/SearchForm'
 import api from '@/api'
 import { useForm } from 'react-hook-form'
@@ -19,13 +19,11 @@ import { useNavigate } from 'react-router-dom'
 import { useRouteSearch } from '@/hooks'
 import { useCallback, useEffect, useState } from 'react'
 import { useConnection, useSession } from '@/hooks'
-import Placeholder from '@/components/Placeholder'
-import { CloudIcon } from '@heroicons/react/20/solid'
 
 interface HerdCreateFormData extends Pick<api.Herd, 'name'> {}
 
 function useHerdCreateForm() {
-  const form = useForm<HerdCreateFormData>({ mode: 'onBlur' })
+  const form = useForm<HerdCreateFormData>({ mode: 'onSubmit' })
 
   const inputs = {
     name: form.register('name', { validate: value => {
@@ -38,7 +36,7 @@ function useHerdCreateForm() {
 
 export default function ListHerds() {
   const { account } = useSession()
-  const createHerdForm = useHerdCreateForm()
+  const form = useHerdCreateForm()
   const navigate = useNavigate()
   const { options } = useConnection()
   const { searchParams } = useRouteSearch()
@@ -85,61 +83,48 @@ export default function ListHerds() {
     reload()
   }, [reload])
 
-  function Header() {
-    return (
+  return (
+    <Main>
       <header>
         <h1>Herds</h1>
-        <ButtonSet>
-          <CreateButton className="fill" onClick={() => navigate('/herds/create')} />
-        </ButtonSet>
       </header>
-    )
-  }
-
-  return result && (
-    <Main>
-      <Header />
 
       <SearchForm />
 
+      <Notice error={error} />
+
       {loading ? (
-        <LoadingIndicator />
-      ) : (
-        <Notice error={error} />
-      )}
-
-      {result.metadata.totalCount > 0 ? (
-        <>
-          {result.results.map(({ herd }) => (
-            <Row key={herd._id} className="herd">
-              <div>
-                <Link to={`/herd/${herd._id}`}>{herd.name}</Link>
-              </div>
-            </Row>
-          ))}
-
-          <Pagination totalCount={result.metadata.totalCount} />
-        </>
-      ) : (
+        <Placeholder>
+          <LoadingIndicator />
+        </Placeholder>
+      ) : (result && result.metadata.totalCount > 0) ? result.results.map(({ herd }) => (
+        <Row key={herd._id} className="herd">
+          <div>
+            <Link to={`/herd/${herd._id}`}>{herd.name}</Link>
+          </div>
+        </Row>
+      )) : (
         <Placeholder>
           <CloudIcon />
           <span>No herds!</span>
         </Placeholder>
       )}
 
-      <form onSubmit={createHerdForm.handleSubmit(createHerd)}>
+      <form onSubmit={form.handleSubmit(createHerd)}>
         <FormGroup name="Create a new herd">
-          <FormInput id="herd:name" label="Name">
-            <input id="herd:name" type="text" {...createHerdForm.inputs.name} />
-            <Chip className="mini" error={createHerdForm.formState.errors.name} />
+          <FormInput>
+            <Row>
+              <input id="name" disabled={busy} type="text" {...form.inputs.name} />
+              <ButtonSet>
+                <CreateButton disabled={busy} type="submit" className="fill" />
+              </ButtonSet>
+            </Row>
+            <Chip className="mini" error={form.formState.errors.name} />
           </FormInput>
-
-          <ButtonSet>
-            <SaveButton type="submit" className="fill" />
-            <ResetButton type="reset" />
-          </ButtonSet>
         </FormGroup>
       </form>
+
+      <Pagination totalCount={result?.metadata.totalCount || 0} />
     </Main>
   )
 }
