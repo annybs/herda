@@ -1,4 +1,4 @@
-import './LoginView.scss'
+import './CreateAccountView.scss'
 import Button from '@/components/button/Button'
 import ButtonSet from '@/components/ButtonSet'
 import Chip from '@/components/Chip'
@@ -10,19 +10,20 @@ import Main from '@/components/Main'
 import Notice from '@/components/Notice'
 import Row from '@/components/Row'
 import type { SubmitHandler } from 'react-hook-form'
-import { useDocument } from '@/hooks'
+import api from '@/api'
 import { useForm } from 'react-hook-form'
 import { useSession } from '@/hooks'
 import { Navigate, useSearchParams } from 'react-router-dom'
+import { useConnection, useDocument } from '@/hooks'
 import { useEffect, useState } from 'react'
 
-interface LoginFormData {
+interface AccountCreateFormData {
   email: string
   password: string
 }
 
-function useLoginForm() {
-  const form = useForm<LoginFormData>()
+function useAccountCreateForm() {
+  const form = useForm<AccountCreateFormData>()
 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<Error>()
@@ -44,20 +45,24 @@ function useLoginForm() {
   }
 }
 
-export default function LoginView() {
+export default function CreateAccountView() {
   const doc = useDocument()
   const [params] = useSearchParams()
+  const { options } = useConnection()
   const session = useSession()
 
-  const { formState: { errors }, ...form } = useLoginForm()
+  const { formState: { errors }, ...form } = useAccountCreateForm()
 
   const [passwordVisible, setPasswordVisible] = useState(false)
   const redirectTo = params.get('redirect') || '/'
 
-  const submit: SubmitHandler<LoginFormData> = async ({ email, password }) => {
+  const submit: SubmitHandler<AccountCreateFormData> = async ({ email, password }) => {
     form.setError(undefined)
     form.setBusy(true)
     try {
+      await api.createAccount(options, {
+        account: { email, password },
+      })
       await session.login(email, password)
     } catch (err) {
       form.setError(err as Error)
@@ -67,7 +72,7 @@ export default function LoginView() {
   }
 
   useEffect(() => {
-    doc.setTitle('Login')
+    doc.setTitle('Create Account')
   }, [doc])
 
   if (session.ready && session.loggedIn) {
@@ -79,7 +84,7 @@ export default function LoginView() {
   return (
     <Main className="center">
       <form onSubmit={form.handleSubmit(submit)}>
-        <FormGroup name="Login">
+        <FormGroup name="Create Account">
           <FormInput id="email" label="Username">
             <input id="email" type="text" {...form.inputs.email} />
             {errors.email && <Chip className="mini" error={errors.email} />}
@@ -96,13 +101,13 @@ export default function LoginView() {
           </FormInput>
 
           <ButtonSet>
-            <Button className="wide fill positive" disabled={form.busy} type="submit">Log in</Button>
+            <Button className="wide fill positive" disabled={form.busy} type="submit">Create and log in</Button>
           </ButtonSet>
 
           <Notice error={form.error} />
 
           <section className="create-account">
-            Don't have an account yet? <Link to="/account/create">Create one</Link>
+            Have an account already? <Link to="/login">Log in</Link>
           </section>
         </FormGroup>
       </form>

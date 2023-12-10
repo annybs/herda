@@ -6,6 +6,7 @@ import HerdView from './views/HerdView'
 import LoginView from './views/LoginView'
 import { Outlet } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
+import CreateAccountView from './views/CreateAccountView'
 
 const coreRoutes: RouteObject[] = [
   {
@@ -53,6 +54,25 @@ const routes: RouteObject[] = [
       {
         path: '',
         element: <LoginView />,
+      },
+    ],
+  },
+  {
+    path: '/account/create',
+    element: (
+      <AppLayout>
+        <Outlet />
+      </AppLayout>
+    ),
+    errorElement: (
+      <AppLayout>
+        <ErrorView />
+      </AppLayout>
+    ),
+    children: [
+      {
+        path: '',
+        element: <CreateAccountView />,
       },
     ],
   },
