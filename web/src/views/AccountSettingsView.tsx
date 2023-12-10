@@ -15,7 +15,7 @@ import api from '@/api'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useState } from 'react'
-import { useConnection, useSession } from '@/hooks'
+import { useConnection, useDocument, useSession } from '@/hooks'
 
 interface AccountUpdateFormData extends Pick<api.Account, 'email' | 'password'> {}
 
@@ -36,6 +36,7 @@ function useAccountUpdateForm() {
 }
 
 export default function AccountSettingsView() {
+  const doc = useDocument()
   const form = useAccountUpdateForm()
   const navigate = useNavigate()
   const { options } = useConnection()
@@ -97,6 +98,10 @@ export default function AccountSettingsView() {
     reset()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    doc.setTitle('My account')
+  }, [doc])
 
   return account && (
     <Main>

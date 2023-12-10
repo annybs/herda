@@ -16,9 +16,9 @@ import SearchForm from '@/components/SearchForm'
 import api from '@/api'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
-import { useRouteSearch } from '@/hooks'
 import { useCallback, useEffect, useState } from 'react'
 import { useConnection, useSession } from '@/hooks'
+import { useDocument, useRouteSearch } from '@/hooks'
 
 interface HerdCreateFormData extends Pick<api.Herd, 'name'> {}
 
@@ -36,6 +36,7 @@ function useHerdCreateForm() {
 
 export default function ListHerds() {
   const { account } = useSession()
+  const doc = useDocument()
   const form = useHerdCreateForm()
   const navigate = useNavigate()
   const { options } = useConnection()
@@ -82,6 +83,10 @@ export default function ListHerds() {
   useEffect(() => {
     reload()
   }, [reload])
+
+  useEffect(() => {
+    doc.setTitle('Herds')
+  }, [doc])
 
   return (
     <Main>

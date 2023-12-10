@@ -11,9 +11,9 @@ import Placeholder from '@/components/Placeholder'
 import ResetButton from '@/components/button/ResetButton'
 import SaveButton from '@/components/button/SaveButton'
 import api from '@/api'
-import { useConnection } from '@/hooks'
 import { useForm } from 'react-hook-form'
 import { useCallback, useEffect, useState } from 'react'
+import { useConnection, useDocument } from '@/hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 
 interface HerdUpdateFormData extends Pick<api.Herd, 'name'> {}
@@ -31,6 +31,7 @@ function useHerdUpdateForm() {
 }
 
 export default function HerdEditView() {
+  const doc = useDocument()
   const { id } = useParams()
   const navigate = useNavigate()
   const { options } = useConnection()
@@ -108,6 +109,12 @@ export default function HerdEditView() {
   useEffect(() => {
     reset()
   }, [reset])
+
+  useEffect(() => {
+    if (data?.herd) doc.setTitle(`Editing - ${data.herd.name}`)
+    else if (loading) doc.setTitle('Loading herd...')
+    else doc.clearTitle()
+  }, [data, doc, loading])
 
   return (
     <Main>

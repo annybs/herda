@@ -24,7 +24,7 @@ import { useForm } from 'react-hook-form'
 import { CheckCircleIcon, CloudIcon, TrashIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useCallback, useEffect, useState } from 'react'
-import { useConnection, useRouteSearch, useSession } from '@/hooks'
+import { useConnection, useDocument, useRouteSearch, useSession } from '@/hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 
 interface TaskCreateFormData extends Pick<api.Task, 'description'> {}
@@ -58,6 +58,7 @@ function useTaskUpdateForm() {
 export default function HerdView() {
   const { account } = useSession()
   const createForm = useTaskCreateForm()
+  const doc = useDocument()
   const { id } = useParams()
   const navigate = useNavigate()
   const { options } = useConnection()
@@ -218,6 +219,12 @@ export default function HerdView() {
   useEffect(() => {
     reload()
   }, [reload])
+
+  useEffect(() => {
+    if (data?.herd) doc.setTitle(data.herd.name)
+    else if (loading) doc.setTitle('Loading herd...')
+    else doc.clearTitle()
+  }, [data, doc, loading])
 
   return (
     <Main>
