@@ -9,7 +9,7 @@ import { version } from '../package.json'
 import type { ErrorRequestHandler, RequestHandler } from 'express'
 
 /** Create an Express application. */
-function createExpress(ctx: Context) {
+function createExpress(ctx: Context, staticsPath?: string) {
   // Initialize app with JSON, CORS, and auth middleware
   const app = express()
   app.use(express.json())
@@ -17,6 +17,9 @@ function createExpress(ctx: Context) {
   app.use(ctx.auth.verifyRequestMiddleware)
 
   const prefix = ctx.config.api.prefix
+
+  // Static frontend
+  if (staticsPath) app.use(express.static(staticsPath, { fallthrough: true }))
 
   // Misc APIs
   app.get(prefix, index)
@@ -48,6 +51,15 @@ function createExpress(ctx: Context) {
 
   // Authentication APIs
   app.post(`${prefix}/login/account`, account.loginAccount(ctx))
+
+  // Static fallback to route to index.html
+  if (staticsPath) app.get('/*', (req, res, next) => {
+    if (!res.headersSent) {
+      res.sendFile(`${staticsPath}/index.html`, err => {
+        next(err)
+      })
+    } else next()
+  })
 
   // Add middleware to handle any errors forwarded from previous handlers via `next(err)`
   const catchError: ErrorRequestHandler = (err, req, res, next) => {

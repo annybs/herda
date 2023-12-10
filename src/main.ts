@@ -3,6 +3,7 @@ import createAuth from './auth'
 import createDatabase from './db'
 import createExpress from './http'
 import createLogger from './log'
+import fs from 'fs/promises'
 import process from 'process'
 import type { Config, Context } from './types'
 
@@ -28,7 +29,18 @@ async function main(config: Config): Promise<void> {
   log.info('Connected to MongoDB', config.mongo)
 
   // Initialize Express app
-  const app = createExpress(ctx)
+  let staticsPath: string | undefined = `${ctx.config.fs.root}/public`
+  try {
+    const stat = await fs.stat(staticsPath)
+    if (!stat.isDirectory()) {
+      ctx.log.warn(`Statics path ${staticsPath} is not a directory, not serving static assets`)
+      staticsPath = undefined
+    }
+  } catch (err) {
+    ctx.log.warn(`Statics path ${staticsPath} not found, not serving static assets`)
+    staticsPath = undefined
+  }
+  const app = createExpress(ctx, staticsPath)
 
   // Start processes.
   // This promise can only be rejected, signifying that the app has stopped

@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import dotenv from 'dotenv'
 import main from './main'
+import path from 'path'
 
 dotenv.config()
 
@@ -33,6 +34,9 @@ main({
     },
   },
   cors: undefined,
+  fs: {
+    root: path.dirname(__dirname),
+  },
   http: {
     host: process.env.HTTP_HOST || '',
     port: parseInt(process.env.HTTP_PORT || '5001'),

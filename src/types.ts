@@ -29,6 +29,13 @@ export interface Config {
    * @see https://www.npmjs.com/package/cors#usage
    */
   cors: Parameters<typeof cors>[0]
+  fs: {
+    /**
+     * Filesystem root directory (AKA location of package.json).
+     * This is detected at startup and not configurable.
+     */
+    root: string
+  }
   http: {
     /** HTTP bind host (default: empty) */
     host: string
