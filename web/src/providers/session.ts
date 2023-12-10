@@ -36,9 +36,9 @@ export function SessionProvider({ children, value: { authStorage } }: ProviderPr
 
   async function heartbeat(token?: string) {
     try {
-      const res = await api.getAccount({ ...options, token })
+      const res = await api.getAccount({ ...options, token: token || options.token })
       setAccount(res.account)
-      setToken(token)
+      if (token) setToken(token)
       setLoggedIn(true)
     } catch (err) {
       const status = (err as api.RequestError).xhr?.status || 500

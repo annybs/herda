@@ -7,11 +7,16 @@ import LoginView from './views/LoginView'
 import { Outlet } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
 import CreateAccountView from './views/CreateAccountView'
+import AccountSettingsView from './views/AccountSettingsView'
 
 const coreRoutes: RouteObject[] = [
   {
     path: '',
     element: <HerdListView />,
+  },
+  {
+    path: '/account/settings',
+    element: <AccountSettingsView />,
   },
   {
     path: '/herd/:id',
