@@ -1,0 +1,7 @@
+.dockerignore
+.eslint*
+.gitignore
+docker-compose*.yml
+Dockerfile
+node_modules
+out
