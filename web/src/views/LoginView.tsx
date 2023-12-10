@@ -80,7 +80,7 @@ export default function LoginView() {
     <Main className="center">
       <form onSubmit={form.handleSubmit(submit)}>
         <FormGroup name="Login">
-          <FormInput id="email" label="Username">
+          <FormInput id="email" label="Email address">
             <input id="email" type="text" {...form.inputs.email} />
             {errors.email && <Chip className="mini" error={errors.email} />}
           </FormInput>
