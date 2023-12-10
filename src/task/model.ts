@@ -17,7 +17,11 @@ async function createTaskModel(ctx: Context) {
   async function create(input: TaskCreate) {
     let position = input.position
     if (!position) {
-      position = 1 + await collection.countDocuments({ _herd: input._herd })
+      const highest = await collection.findOne(
+        { _herd: input._herd },
+        { sort: { position: -1 } },
+      )
+      position = 1 + (highest?.position || 0)
     }
 
     const result = await collection.insertOne({
