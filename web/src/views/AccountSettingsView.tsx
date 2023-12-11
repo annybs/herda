@@ -17,15 +17,13 @@ import { useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useState } from 'react'
 import { useConnection, useDocument, useSession } from '@/hooks'
 
-interface AccountUpdateFormData extends Pick<api.Account, 'email' | 'password'> {}
+type AccountUpdateFormData = api.UpdateAccountRequest['account']
 
 function useAccountUpdateForm() {
   const form = useForm<AccountUpdateFormData>({ mode: 'onBlur' })
 
   const inputs = {
-    email: form.register('email', { validate: {
-      required: value => value.length >= 1 || 'Required',
-    }}),
+    email: form.register('email'),
     password: form.register('password', { validate: value => {
       if (!value) return
       if (value.length < 8) return 'Must be at least 8 characters'
