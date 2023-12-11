@@ -30,8 +30,9 @@ function useAccountCreateForm() {
       if (!value) return 'Required'
       return validate.email(value)
     }}),
-    password: form.register('password', { validate: {
-      minLength: value => value.length >= 8 || 'Must be at least 8 characters',
+    password: form.register('password', { validate: value => {
+      if (!value) return 'Required'
+      return validate.password(value)
     }}),
   }
 

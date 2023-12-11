@@ -3,6 +3,7 @@ import type { Context } from '../types'
 import type { RequestHandler } from 'express'
 import type { WithId } from 'mongodb'
 import { prepareAccount } from './http'
+import { password as validatePassword } from '../validate'
 import type { Account, AccountCreate, AccountUpdate } from './types'
 import { http, validate as v } from '@edge/misc-utils'
 
@@ -19,7 +20,7 @@ export function createAccount({ model }: Context): RequestHandler {
   const readRequestData = v.validate<RequestData>({
     account: {
       email: v.email,
-      password: v.seq(v.str, v.minLength(8)),
+      password: validatePassword,
     },
   })
 
@@ -176,7 +177,7 @@ export function updateAccount({ model }: Context): AuthRequestHandler {
   const readRequestData = v.validate<RequestData>({
     account: {
       email: v.seq(v.optional, v.email),
-      password: v.seq(v.optional, v.str, v.minLength(8)),
+      password: v.seq(v.optional, validatePassword),
     },
   })
 

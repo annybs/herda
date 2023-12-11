@@ -27,7 +27,7 @@ function useAccountUpdateForm() {
     email: form.register('email', { validate: validate.email }),
     password: form.register('password', { validate: value => {
       if (!value) return
-      if (value.length < 8) return 'Must be at least 8 characters'
+      return validate.password(value)
     }}),
   }
 
