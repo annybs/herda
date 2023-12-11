@@ -1,0 +1,13 @@
+@import '@/vars.scss';
+@import './mixins.scss';
+
+.toggle {
+  display: flex;
+  flex-direction: row;
+  font: inherit;
+
+  label {
+    margin-left: $space-s;
+    margin-bottom: $space-xs;
+  }
+}

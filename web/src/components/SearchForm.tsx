@@ -1,15 +1,15 @@
 import './SearchForm.scss'
 import Button from './button/Button'
 import ButtonSet from './ButtonSet'
-import type { FormEvent } from 'react'
 import FormGroup from './form/FormGroup'
 import FormInput from './form/FormInput'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import Row from './Row'
 import { useRouteSearch } from '@/hooks'
 import { useState } from 'react'
+import type { FormEvent, PropsWithChildren } from 'react'
 
-export default function SearchForm() {
+export default function SearchForm({ children }: PropsWithChildren) {
   const { searchTerms, setSearchTerms } = useRouteSearch()
 
   const [searchInput, setSearchInput] = useState(searchTerms)
@@ -38,6 +38,7 @@ export default function SearchForm() {
             </ButtonSet>
           </Row>
         </FormInput>
+        {children}
       </FormGroup>
     </form>
   )

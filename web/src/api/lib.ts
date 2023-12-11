@@ -70,6 +70,7 @@ export class RequestError extends Error {
 
 /** Search and pagination parameters. */
 export interface SearchParams {
+  filter?: string[]
   limit?: number
   page?: number
   search?: string
@@ -102,6 +103,7 @@ export function readSearchParams(up: URLSearchParams): SearchParams {
   if (up.has('page')) params.page = parseInt(up.get('page') as string)
   if (up.has('search')) params.search = up.get('search') as string
 
+  if (up.has('filter')) params.filter = up.getAll('filter')
   if (up.has('sort')) params.sort = up.getAll('sort')
 
   return params
@@ -152,6 +154,10 @@ export function writeSearchParams(params: SearchParams): URLSearchParams {
   if (params.limit !== undefined) up.append('limit', `${params.limit}`)
   if (params.page !== undefined) up.append('page', `${params.page}`)
   if (params.search !== undefined) up.append('search', params.search)
+
+  if (params.filter !== undefined) {
+    for (const filter of params.filter) up.append('filter', filter)
+  }
 
   if (params.sort !== undefined) {
     for (const sort of params.sort) up.append('sort', sort)

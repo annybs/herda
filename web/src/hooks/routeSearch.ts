@@ -5,6 +5,14 @@ import { useSearchParams } from 'react-router-dom'
 export function useRouteSearch() {
   const [search, setSearch] = useSearchParams()
 
+  function setFilters(filters: string[]) {
+    setSearch(prev => {
+      prev.delete('filter')
+      for (const filter of filters) prev.append('filter', filter)
+      return prev
+    })
+  }
+
   function setLimit(limit: number) {
     setSearch(prev => {
       prev.set('limit', limit.toString())
@@ -47,12 +55,14 @@ export function useRouteSearch() {
   const limit = searchParams.limit || 10
   const page = searchParams.page || 1
 
+  const filter = searchParams.filter || []
   const sort = searchParams.sort || []
 
   return {
-    limit, page, searchTerms, sort,
+    filter, limit, page, searchTerms, sort,
     searchParams, search,
 
+    setFilters,
     setLimit,
     setPage,
     setSearch,

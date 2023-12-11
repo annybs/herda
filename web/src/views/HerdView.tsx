@@ -9,6 +9,7 @@ import type { DragEndEvent } from '@dnd-kit/core'
 import EditButton from '@/components/button/EditButton'
 import FormGroup from '@/components/form/FormGroup'
 import FormInput from '@/components/form/FormInput'
+import FormToggle from '@/components/form/FormToggle'
 import LoadingIndicator from '@/components/LoadingIndicator'
 import Main from '@/components/Main'
 import Notice from '@/components/Notice'
@@ -63,7 +64,7 @@ export default function HerdView() {
   const navigate = useNavigate()
   const { options } = useConnection()
   const updateForm = useTaskUpdateForm()
-  const { limit, page, searchParams, setPage } = useRouteSearch()
+  const { filter, limit, page, searchParams, setFilters, setPage } = useRouteSearch()
 
   const [data, setData] = useState<api.GetHerdResponse>()
   const [taskData, setTaskData] = useState<api.SearchResponse<api.GetTaskResponse>>()
@@ -74,6 +75,7 @@ export default function HerdView() {
   const [loading, setLoading] = useState(false)
 
   const disableSorting = Boolean(searchParams.search)
+  const showCompleted = filter.includes('showCompleted')
 
   async function createTask(data: TaskCreateFormData) {
     if (busy) return
@@ -153,6 +155,11 @@ export default function HerdView() {
     } finally {
       setBusy(false)
     }
+  }
+
+  function toggleShowCompleted() {
+    if (showCompleted) setFilters([])
+    else setFilters(['showCompleted'])
   }
 
   async function toggleTaskDone(task: api.WithId<api.Task>) {
@@ -239,7 +246,9 @@ export default function HerdView() {
         </ButtonSet>
       </header>
 
-      <SearchForm />
+      <SearchForm>
+        <FormToggle label="Show completed tasks" id="show-completed" checked={showCompleted} onChange={toggleShowCompleted} />
+      </SearchForm>
 
       <Notice error={error} />
 

@@ -171,25 +171,33 @@ export function searchTasks({ model }: Context): AuthRequestHandler {
 
     // Read parameters
     const herd = req.params.herd || undefined
+    const filters = query.array(req.query.filter, [])
     const limit = query.integer(req.query.limit, 1, 100) || 10
     const page = query.integer(req.query.page, 1) || 1
     const search = query.str(req.query.search)
     const sort = query.sorts(req.query.sort, ['description', 'position'], ['position', 'ASC'])
 
-    // Build filters and skip
+    // Build filters
     const filter: Record<string, unknown> = {
       _account: req.account._id,
     }
+    // Add herd filter if set.
+    // We don't need to verify access as it is implicitly asserted by the _account filter
     if (herd) {
-      // Add herd filter if set.
-      // We don't need to verify access as it is implicitly asserted by the _account filter
       try {
         filter._herd = new ObjectId(herd)
       } catch (err) {
         return http.badRequest(res, next, { reason: 'invalid herd' })
       }
     }
+    // Hide completed tasks by default
+    if (!filters.includes('showCompleted')) {
+      filter.done = { $eq: false }
+    }
+    // Textual search
     if (search) filter.$text = { $search: search }
+
+    // Set skip
     const skip = (page - 1) * limit
 
     try {
