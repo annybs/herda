@@ -63,10 +63,10 @@ function createExpress(ctx: Context, staticsPath?: string) {
 
   // Add middleware to handle any errors forwarded from previous handlers via `next(err)`
   const catchError: ErrorRequestHandler = (err, req, res, next) => {
-    if (!res.headersSent) {
-      http.internalServerError(res, next, { reason: (err as Error).message })
-    }
     ctx.log.error(err)
+    if (!res.headersSent) {
+      http.internalServerError(res, next)
+    }
   }
   app.use(catchError)
 

@@ -11,7 +11,7 @@ export default function Notice({ className = '', error, ...props }: PropsWithChi
   if (error?.name === 'RequestError') {
     let message = ''
     const re = error as RequestError
-    if (re.data) {
+    if (re.data && Object.keys(re.data).length > 0) {
       if (re.data.param && re.data.reason) message = `Error in ${re.data.param}: ${re.data.reason}`
       else if (re.data.reason) message = `Error: ${re.data.reason}`
     } else message = `Error: ${re.message}`
