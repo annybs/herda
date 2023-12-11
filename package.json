@@ -1,7 +1,7 @@
 {
   "name": "herda",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Keep on top of it all with Herda",
   "scripts": {
     "build": "tsc",
