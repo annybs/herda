@@ -1,4 +1,5 @@
 import './LoginView.scss'
+import * as validate from '@/lib/validate'
 import Button from '@/components/button/Button'
 import ButtonSet from '@/components/ButtonSet'
 import Chip from '@/components/Chip'
@@ -21,11 +22,12 @@ interface LoginFormData {
 }
 
 function useLoginForm() {
-  const form = useForm<LoginFormData>()
+  const form = useForm<LoginFormData>({ mode: 'onBlur' })
 
   const inputs = {
-    email: form.register('email', { validate: {
-      required: value => value.length >= 1 || 'Required',
+    email: form.register('email', { validate: value => {
+      if (!value) return 'Required'
+      return validate.email(value)
     }}),
     password: form.register('password', { validate: {
       minLength: value => value.length >= 8 || 'Must be at least 8 characters',

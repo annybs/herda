@@ -1,3 +1,4 @@
+import * as validate from '@/lib/validate'
 import BackButton from '@/components/button/BackButton'
 import ButtonSet from '@/components/ButtonSet'
 import Chip from '@/components/Chip'
@@ -23,7 +24,7 @@ function useAccountUpdateForm() {
   const form = useForm<AccountUpdateFormData>({ mode: 'onBlur' })
 
   const inputs = {
-    email: form.register('email'),
+    email: form.register('email', { validate: validate.email }),
     password: form.register('password', { validate: value => {
       if (!value) return
       if (value.length < 8) return 'Must be at least 8 characters'
