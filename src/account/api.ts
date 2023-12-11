@@ -2,6 +2,7 @@ import type { AuthRequestHandler } from '../auth'
 import type { Context } from '../types'
 import type { RequestHandler } from 'express'
 import type { WithId } from 'mongodb'
+import { prepareAccount } from './http'
 import type { Account, AccountCreate, AccountUpdate } from './types'
 import { http, validate as v } from '@edge/misc-utils'
 
@@ -12,7 +13,7 @@ export function createAccount({ model }: Context): RequestHandler {
   }
 
   interface ResponseData {
-    account: WithId<Account>
+    account: WithId<Partial<Account>>
   }
 
   const readRequestData = v.validate<RequestData>({
@@ -29,7 +30,7 @@ export function createAccount({ model }: Context): RequestHandler {
       const account = await model.account.create(input.account)
       if (!account) return http.notFound(res, next, { reason: 'unexpectedly failed to get new account' })
 
-      const output: ResponseData = { account }
+      const output: ResponseData = { account: prepareAccount(account) }
       res.send(output)
       next()
     } catch (err) {
@@ -46,7 +47,7 @@ export function createAccount({ model }: Context): RequestHandler {
 /** Delete an account. */
 export function deleteAccount({ model }: Context): AuthRequestHandler {
   interface ResponseData {
-    account: WithId<Account>
+    account: WithId<Partial<Account>>
     herds: {
       deletedCount: number
     }
@@ -70,7 +71,7 @@ export function deleteAccount({ model }: Context): AuthRequestHandler {
 
       // Send output
       const output: ResponseData = {
-        account,
+        account: prepareAccount(account),
         herds: {
           deletedCount: deletedHerds,
         },
@@ -89,7 +90,7 @@ export function deleteAccount({ model }: Context): AuthRequestHandler {
 /** Get an account. */
 export function getAccount(): AuthRequestHandler {
   interface ResponseData {
-    account: WithId<Account>
+    account: WithId<Partial<Account>>
   }
 
   return async function (req, res, next) {
@@ -101,7 +102,7 @@ export function getAccount(): AuthRequestHandler {
 
     try {
       // Send output
-      const output: ResponseData = { account: req.account }
+      const output: ResponseData = { account: prepareAccount(req.account) }
       res.send(output)
       next()
     } catch (err) {
@@ -121,7 +122,7 @@ export function loginAccount({ auth, model }: Context): RequestHandler {
 
   interface ResponseData {
     token: string
-    account: WithId<Account>
+    account: WithId<Partial<Account>>
   }
 
   const readRequestData = v.validate<RequestData>({
@@ -148,7 +149,7 @@ export function loginAccount({ auth, model }: Context): RequestHandler {
       const token = await auth.sign(account._id)
 
       // Send output
-      const output: ResponseData = { token, account }
+      const output: ResponseData = { token, account: prepareAccount(account) }
       res.send(output)
       next()
     } catch (err) {
@@ -169,7 +170,7 @@ export function updateAccount({ model }: Context): AuthRequestHandler {
   }
 
   interface ResponseData {
-    account: WithId<Account>
+    account: WithId<Partial<Account>>
   }
 
   const readRequestData = v.validate<RequestData>({
@@ -198,7 +199,7 @@ export function updateAccount({ model }: Context): AuthRequestHandler {
       if (!account) return http.notFound(res, next)
 
       // Send output
-      const output: ResponseData = { account }
+      const output: ResponseData = { account: prepareAccount(account) }
       res.send(output)
       next()
     } catch (err) {

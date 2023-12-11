@@ -1,19 +1,17 @@
 import { request } from './lib'
-import type { Options, SomeRequired, WithId } from './lib'
+import type { Options, WithId } from './lib'
 
 /** Account data. */
 export interface Account {
   /** Email address. Used for authentication. */
   email: string
-  /** Password. Used for authentication. */
-  password: string
-  /** Password salt. Used for authentication. */
-  passwordSalt: string
 }
 
 /** Create account request data. */
 export interface CreateAccountRequest {
-  account: SomeRequired<Account, 'email' | 'password'>
+  account: Account & {
+    password: string
+  }
 }
 
 /** Create account response data. */
@@ -39,7 +37,9 @@ export interface GetAccountResponse {
 
 /** Account login request data. */
 export interface LoginAccountRequest {
-  account: Pick<Account, 'email' | 'password'>
+  account: Account & {
+    password: string
+  }
 }
 
 /** Account login response data. */
@@ -50,7 +50,9 @@ export interface LoginAccountResponse {
 
 /** Update account request data. */
 export interface UpdateAccountRequest {
-  account: Partial<Account>
+  account: Partial<Account> & {
+    password?: string
+  }
 }
 
 /** Update account response data. */
