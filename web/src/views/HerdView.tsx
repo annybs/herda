@@ -9,7 +9,6 @@ import type { DragEndEvent } from '@dnd-kit/core'
 import EditButton from '@/components/button/EditButton'
 import FormGroup from '@/components/form/FormGroup'
 import FormInput from '@/components/form/FormInput'
-import FormToggle from '@/components/form/FormToggle'
 import LoadingIndicator from '@/components/LoadingIndicator'
 import Main from '@/components/Main'
 import Notice from '@/components/Notice'
@@ -20,6 +19,7 @@ import SaveButton from '@/components/button/SaveButton'
 import SearchForm from '@/components/SearchForm'
 import SortableRow from '@/components/SortableRow'
 import type { SubmitHandler } from 'react-hook-form'
+import ToggleButton from '@/components/button/ToggleButton'
 import api from '@/api'
 import { useForm } from 'react-hook-form'
 import { CheckCircleIcon, CloudIcon, TrashIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/20/solid'
@@ -247,7 +247,11 @@ export default function HerdView() {
       </header>
 
       <SearchForm>
-        <FormToggle label="Show completed tasks" id="show-completed" checked={showCompleted} onChange={toggleShowCompleted} />
+        <ButtonSet>
+          <ToggleButton className="mini" toggled={showCompleted} onClick={toggleShowCompleted}>
+            <span>Show completed items</span>
+          </ToggleButton>
+        </ButtonSet>
       </SearchForm>
 
       <Notice error={error} />
