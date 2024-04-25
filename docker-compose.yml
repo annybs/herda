@@ -1,9 +1,15 @@
-version: "3"
-
 volumes:
   mongo-data:
 
 services:
+  herda:
+    image: herda:latest
+    build:
+      context: .
+    ports:
+      - "5001:5001"
+    env_file: .docker.env
+
   mongo:
     image: mongo:7.0.4
     ports:
