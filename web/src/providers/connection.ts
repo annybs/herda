@@ -1,6 +1,7 @@
 import type { ProviderProps } from 'react'
 import api from '@/api'
 import { createContext, createElement, useEffect, useReducer, useState } from 'react'
+import { useConfig } from '@/hooks'
 
 /**
  * API connection state.
@@ -33,11 +34,12 @@ export const ConnectionContext = createContext({} as ConnectionState)
  * API connection provider.
  * This should be one of the root components of the application.
  */
-export function ConnectionProvider({ children, value: props }: ProviderProps<api.Options>) {
+export function ConnectionProvider({ children }: ProviderProps<undefined>) {
   const [available, setAvailable] = useState(false)
+  const { config } = useConfig()
   const [error, setError] = useState<Error>()
   const [info, setInfo] = useState<api.ServerInfo>()
-  const [options, dispatchOptions] = useReducer(OptionsReducer, props)
+  const [options, dispatchOptions] = useReducer(OptionsReducer, config.api)
 
   async function connect() {
     try {

@@ -8,14 +8,12 @@ import build from './build'
 import { localValueStorage } from './lib/valueStorage'
 import routes from './routes'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
+import { ConfigProvider } from './providers/config'
+import AwaitConfig from './components/AwaitConfig'
 
-const connectionProps = {
-  host: build.api.host,
-  timeout: build.api.timeout,
-}
-
-const documentProps = {
-  titleSuffix: build.document.titleSuffix,
+const configProps = {
+  defaults: build,
+  path: '/config.json'
 }
 
 const router = createBrowserRouter(routes)
@@ -26,12 +24,16 @@ const sessionProps = {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <DocumentProvider value={documentProps}>
-      <ConnectionProvider value={connectionProps}>
-        <SessionProvider value={sessionProps}>
-          <RouterProvider router={router} />
-        </SessionProvider>
-      </ConnectionProvider>
-    </DocumentProvider>
+    <ConfigProvider value={configProps}>
+      <AwaitConfig>
+        <DocumentProvider value={undefined}>
+          <ConnectionProvider value={undefined}>
+            <SessionProvider value={sessionProps}>
+              <RouterProvider router={router} />
+            </SessionProvider>
+          </ConnectionProvider>
+        </DocumentProvider>
+      </AwaitConfig>
+    </ConfigProvider>
   </React.StrictMode>,
 )

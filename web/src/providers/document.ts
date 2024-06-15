@@ -1,9 +1,6 @@
+import { useConfig } from '@/hooks'
 import type { ProviderProps} from 'react'
 import { createContext, createElement, useEffect, useState } from 'react'
-
-export interface DocumentProps {
-  titleSuffix: string
-}
 
 export interface DocumentState {
   clearTitle(): void
@@ -12,7 +9,9 @@ export interface DocumentState {
 
 export const DocumentContext = createContext({} as DocumentState)
 
-export function DocumentProvider({ children, value: params }: ProviderProps<DocumentProps>) {
+export function DocumentProvider({ children }: ProviderProps<undefined>) {
+  const { config } = useConfig()
+
   const [title, setTitle] = useState<string>()
 
   function clearTitle() {
@@ -21,11 +20,11 @@ export function DocumentProvider({ children, value: params }: ProviderProps<Docu
 
   useEffect(() => {
     if (title) {
-      document.title = `${title} - ${params.titleSuffix}`
+      document.title = `${title} - ${config.document.titleSuffix}`
     } else {
-      document.title = params.titleSuffix
+      document.title = config.document.titleSuffix
     }
-  }, [params.titleSuffix, title])
+  }, [config.document.titleSuffix, title])
 
   const value = { clearTitle, setTitle }
 

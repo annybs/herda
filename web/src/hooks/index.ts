@@ -1,9 +1,15 @@
+import { ConfigContext } from '@/providers/config'
 import { ConnectionContext } from '@/providers/connection'
 import { DocumentContext } from '@/providers/document'
 import { SessionContext } from '@/providers/session'
 import { useContext } from 'react'
 
 export { useRouteSearch } from './routeSearch'
+
+/** Get remote configuration. */
+export function useConfig() {
+  return useContext(ConfigContext)
+}
 
 /**
  * Get the connection to the Herda server.
