@@ -28,6 +28,11 @@ RUN npm run build
 
 FROM node:20
 
+ARG VITE_API_HOST=http://localhost:5001
+ENV VITE_API_HOST $VITE_API_HOST
+
+RUN apt update && apt install -y gettext
+
 WORKDIR /app
 
 COPY LICENSE.md package-lock.json package.json ./
@@ -35,4 +40,8 @@ COPY --from=build_server /app/out ./out
 COPY --from=build_server /app/node_modules ./node_modules
 COPY --from=build_web /web/dist ./out/public
 
+COPY docker /docker
+RUN chmod +x /docker/entrypoint.sh
+
+ENTRYPOINT ["/docker/entrypoint.sh"]
 CMD ["npm", "start"]
